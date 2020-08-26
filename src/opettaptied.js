@@ -69,7 +69,7 @@ const parseOpettaptied = () => {
                     end.setHours(+hour2)
                     end.setMinutes(+minute2)
                     // handle potential day rollover (badly)
-                    if (endTime.getTime() < startTime.getTime()) endTime.setTime(endTime.getTime() + ONE_DAY)
+                    if (end.getTime() < start.getTime()) end.setTime(end.getTime() + ONE_DAY)
                     activity.instances.push(new Instance(activity, start, end, location))
                 }
             })
