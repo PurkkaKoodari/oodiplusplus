@@ -71,9 +71,14 @@ const checkVersion = upstreamVersion => {
         const $updateInfo = $.make("div").addClass("opp-new-version").append(
             $.make("h3").text("A new version of Oodi++ is available!")
         ).append(
-            $.make("div").append("Click here to install it: ").append(
-                $.make("a").attr("href", UPDATE_URL).text(UPDATE_URL)
-            )
+            $.make("div")
+                    .append("Click here to install it: ")
+                    .append(
+                        $.make("a")
+                                .attr("href", UPDATE_URL)
+                                .attr("target", "_blank")
+                                .text(UPDATE_URL)
+                    )
         )
         $sidebarContent.prepend($updateInfo)
         requestSidebarFocus()
