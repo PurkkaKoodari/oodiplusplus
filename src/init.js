@@ -8,6 +8,13 @@ console.info(`Oodi++ ${VERSION} active`)
 
 
 
+// Get the language code from the page.
+let language = $("html").attr("lang")
+if (!["fi", "sv", "en"].includes(language)) language = "fi"
+
+
+
+
 // Various time constants in milliseconds.
 const ONE_MINUTE = 60 * 1000
 const ONE_HOUR = 60 * ONE_MINUTE
