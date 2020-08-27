@@ -40,5 +40,3 @@ $("body").append($sidebarWrapper)
 const requestSidebarFocus = () => {
     if (!sidebarOpen) $sidebarOpener.addClass("opp-alert")
 }
-
-initUpdateCheck()

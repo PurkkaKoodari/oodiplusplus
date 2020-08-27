@@ -49,3 +49,5 @@ else $releaseNotesList.hide()
 const whatsNewSeen = () => {
     typeof GM_setValue === "function" && GM_setValue("whatsNewVersion", CHANGELOG[0].version)
 }
+
+initUpdateCheck()
