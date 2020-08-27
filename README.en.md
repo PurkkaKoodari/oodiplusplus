@@ -22,6 +22,14 @@ Then download the userscript itself. It's available in three editions:
   internet. Choose this option if you want to read through the code and make sure no changes are made without you noticing.
 - [Tinfoil hat edition](oodiplusplus.folio.user.js) makes no network requests. Because someone was always going to ask for this.
 
+## Building
+
+The original source code is available on [GitLab][gitlab]. It intentionally uses an extremely simple build system to preserve
+a human readable output.
+
+To build the userscripts just run `make` (requires a normal *nix environment).
+
 [userscript]: https://en.wikipedia.org/wiki/Userscript
 [tm-ff]: https://addons.mozilla.org/fi/firefox/addon/tampermonkey/
 [tm-chrome]: https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo
+[gitlab]: https://gitlab.com/PurkkaKoodari/oodiplusplus

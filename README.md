@@ -23,6 +23,14 @@ Tämän jälkeen lataa itse userscript. Se on saatavilla kolmena versiona:
   koodiin tehdä muutoksia huomaamattasi.
 - [Foliohattuversio](oodiplusplus.folio.user.js) ei tee mitään verkkopyyntöjä. Koska joku kuitenkin pyytää tätä.
 
+## Buildaus
+
+Alkuperäinen lähdekoodi on saatavilla [GitLabissa][gitlab]. Se käyttää tarkoituksella erittäin yksinkertaista build-järjestelmää,
+jotta lopputulos on lukukelpoinen sellaisenaan.
+
+Buildataksesi userscriptit suorita komento `make` (vaatii normaalin *nix-ympäristön).
+
 [userscript]: https://en.wikipedia.org/wiki/Userscript
 [tm-ff]: https://addons.mozilla.org/fi/firefox/addon/tampermonkey/
 [tm-chrome]: https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo
+[gitlab]: https://gitlab.com/PurkkaKoodari/oodiplusplus

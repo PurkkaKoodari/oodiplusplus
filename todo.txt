@@ -3,6 +3,7 @@ TODO:
 - add dark theme
 - add backend sync
 - resizable schedule view
-- verify autocheck implementation
-- blink sidebar button when selections are made with sidebar closed
 - add ical/ics export
+- add course tooltips in schedule
+- add option to remove from schedule
+- (automatically?) prune activities in past
