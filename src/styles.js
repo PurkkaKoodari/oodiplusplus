@@ -33,6 +33,13 @@ GM_addStyle(`
     padding: 0 10px 10px !important;
 }
 
+.opp-hovered-activity {
+    background: #ddf;
+}
+.opp-hovered-activity td {
+    background: transparent !important;
+}
+
 /* styles for the sidebar */
 @keyframes opp-sidebar-opener-alert {
     0% {

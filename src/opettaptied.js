@@ -86,10 +86,18 @@ const parseOpettaptied = () => {
 
             $(this).children("td:nth-child(3)").append($selectButton)
 
+            if (activity.inPast) {
+                $selectButton.after(
+                    $.make("span").text("This activity is in the past.")
+                )
+            }
+
             $(this).closest("tr").on("mouseenter", function () {
+                $(this).addClass("opp-hovered-activity")
                 hoveredActivity = activity
                 updateScheduleView()
             }).on("mouseleave", function () {
+                $(this).removeClass("opp-hovered-activity")
                 if (hoveredActivity === activity) hoveredActivity = null
                 updateScheduleView()
             })
