@@ -63,9 +63,26 @@ GM_addStyle(`
     background: white;
     font-size: 14px;
 }
+.opp-sidebar-wrapper h2 {
+    font-size: 1.4em;
+    margin: 0.4em 0;
+}
+.opp-sidebar-wrapper h3 {
+    font-size: 1.25em;
+    margin: 0.5em 0;
+}
+.opp-sidebar-wrapper h4 {
+    font-size: 1.1em;
+    margin: 0.6em 0;
+}
+.opp-sidebar-wrapper p, .opp-sidebar-wrapper ul {
+    margin: 0.7em 0;
+}
 .opp-sidebar-content {
     width: 540px;
     height: 100vh;
+    padding: 0 10px;
+    box-sizing: border-box;
     overflow: hidden auto;
 }
 .opp-sidebar-opener {
@@ -84,31 +101,23 @@ GM_addStyle(`
     animation: 1s infinite ease opp-sidebar-opener-alert;
 }
 
+.opp-whats-new {
+    margin-bottom: 10px;
+}
+.opp-whats-new .opp-header, .opp-update-check {
+    display: flex;
+    align-items: baseline;
+}
+.opp-whats-new .opp-header :first-child, .opp-update-check :first-child {
+    flex-grow: 1;
+}
 .opp-new-version h3 {
     color: #900;
-}
-.opp-new-version div {
-    margin: 10px;
-}
-.opp-whats-new .opp-header {
-    display: flex;
-}
-.opp-whats-new h2 {
-    flex-grow: 1;
-}
-.opp-update-check {
-    display: flex;
-}
-opp-update-check :first-child {
-    flex-grow: 1;
-}
-
-.opp-sidebar-content h3 {
-    margin: 10px;
 }
 
 .opp-schedule {
     position: relative;
+    margin: 0 -10px;
 }
 .opp-schedule > div {
     position: absolute;

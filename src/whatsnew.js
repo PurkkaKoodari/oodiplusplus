@@ -12,7 +12,7 @@ const $releaseNotesList = $.make("div").addClass("opp-release-notes")
 for (const {version, changes} of CHANGELOG) {
     $releaseNotesList
             .append(
-                $.make("h3").text(`version ${version}`)
+                $.make("h4").text(`version ${version}`)
             )
             .append(
                 $.make("ul").append(
