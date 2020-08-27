@@ -46,7 +46,7 @@ GM_addStyle(`
         background: #fff;
     }
     50% {
-        background: #ddf;
+        background: #ccf;
     }
     100% {
         background: #fff;

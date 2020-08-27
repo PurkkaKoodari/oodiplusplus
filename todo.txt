@@ -7,3 +7,4 @@ TODO:
 - add course tooltips in schedule
 - add option to remove from schedule
 - (automatically?) prune activities in past
+- add image gallery to README when the ui is nicer

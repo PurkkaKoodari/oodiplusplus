@@ -74,13 +74,21 @@ const parseOpettaptied = () => {
                 }
             })
 
-            const $selectButton = $.make("button").attr("type", "button").prop("disabled", activity.inPast && !activity.selected).text(activity.selected ? "Remove" : "Select").click(() => {
+            const $selectButton = $.make("button")
+                    .attr("type", "button")
+                    .click(() => {
                 if (activity.selected) delete selectedActivities[activity.identifier]
                 else selectedActivities[activity.identifier] = activity
-                $selectButton.prop("disabled", activity.inPast && !activity.selected).text(activity.selected ? "Remove" : "Select")
                 saveSelectedActivities()
+                updateSelectButton()
                 updateScheduleView()
+                requestSidebarFocus()
             })
+
+            const updateSelectButton = () => {
+                $selectButton.prop("disabled", activity.inPast && !activity.selected).text(activity.selected ? "Remove" : "Select")
+            }
+            updateSelectButton()
 
             if (!activity.instances.length) return
 
