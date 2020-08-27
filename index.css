@@ -12,7 +12,7 @@ body {
     padding: 20px;
     background: #181818;
 }
-:link, :link:visited, :link:active {
+a:link, a:visited, a:active {
     color: #ccc;
 }
 h1, h2 {
