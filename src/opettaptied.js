@@ -92,7 +92,7 @@ const parseOpettaptied = () => {
                 )
             }
 
-            $(this).closest("tr").on("mouseenter", function () {
+            $(this).parent().closest("tr").on("mouseenter", function () {
                 $(this).addClass("opp-hovered-activity")
                 hoveredActivity = activity
                 updateScheduleView()
