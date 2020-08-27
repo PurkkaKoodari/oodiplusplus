@@ -1,1 +1,7 @@
+# JS build files
 *.user.js
+
+# HTML build files
+*.md.html
+index.html
+index.en.html
