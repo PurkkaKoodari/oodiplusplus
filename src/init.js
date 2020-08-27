@@ -57,7 +57,7 @@ while (thisMonday.getDay() != 1) thisMonday.setTime(thisMonday.getTime() - ONE_D
 const loadSelectedActivities = () => {
     if (typeof GM_getValue !== "function") return {}
     const serializedActivities = GM_getValue("selectedActivities", null)
-    if (typeof serializedActivities !== "array") return {}
+    if (!serializedActivities) return {}
 
     const activities = {}
     for (const {course, type, name, url, instances} of serializedActivities) {
