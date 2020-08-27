@@ -104,7 +104,7 @@ const checkVersion = upstreamVersion => {
             $.make("h3").text(`A new version of Oodi++ is available: ${upstreamVersion}!`)
         ).append(
             $.make("div")
-                    .append("Click here to install it: ")
+                    .append("Click here to install it, then refresh the page: ")
                     .append(
                         $.make("a")
                                 .attr("href", UPDATE_URL)

@@ -86,7 +86,7 @@ const parseOpettaptied = () => {
             })
 
             const updateSelectButton = () => {
-                $selectButton.prop("disabled", activity.inPast && !activity.selected).text(activity.selected ? "Remove" : "Select")
+                $selectButton.prop("disabled", activity.inPast && !activity.selected).text(activity.selected ? "Remove from Oodi++" : "Add to Oodi++")
             }
             updateSelectButton()
 
