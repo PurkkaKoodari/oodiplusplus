@@ -38,7 +38,7 @@ const $releaseNotes = $.make("div")
         )
         .append($releaseNotesList)
 
-$sidebarContent.prepend($whatsNew)
+$sidebarContent.prepend($releaseNotes)
 
 // If there are release notes the user hasn't seen, ping the user.
 const unseenNotes = typeof GM_getValue === "function" && GM_getValue("whatsNewVersion") !== CHANGELOG[0].version
