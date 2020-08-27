@@ -13,4 +13,4 @@
 // @downloadURL  https://purkka.codes/oodi/oodiplusplus.autoupdate.user.js
 // ==/UserScript==
 
-const updateCheck = () => {}
+const initUpdateCheck = () => {}

@@ -20,7 +20,10 @@ const $sidebarOpener = $.make("button")
     typeof GM_setValue === "function" && GM_setValue("sidebarOpen", sidebarOpen)
     $bodyWrapper.animate({marginRight: sidebarOpen ? "540px" : "0"})
     $sidebarWrapper.animate({width: sidebarOpen ? "540px" : "0"})
-    $sidebarOpener.removeClass("opp-alert")
+    if (sidebarOpen) {
+        $sidebarOpener.removeClass("opp-alert")
+        whatsNewSeen()
+    }
 })
 
 const $sidebarContent = $.make("div")
@@ -38,4 +41,4 @@ const requestSidebarFocus = () => {
     if (!sidebarOpen) $sidebarOpener.addClass("opp-alert")
 }
 
-updateCheck()
+initUpdateCheck()

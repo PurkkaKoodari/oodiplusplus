@@ -90,6 +90,18 @@ GM_addStyle(`
 .opp-new-version div {
     margin: 10px;
 }
+.opp-whats-new .opp-header {
+    display: flex;
+}
+.opp-whats-new h2 {
+    flex-grow: 1;
+}
+.opp-update-check {
+    display: flex;
+}
+opp-update-check :first-child {
+    flex-grow: 1;
+}
 
 .opp-sidebar-content h3 {
     margin: 10px;

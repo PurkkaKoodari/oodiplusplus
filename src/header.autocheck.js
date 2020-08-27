@@ -30,46 +30,78 @@ const isNewer = (ours, upstream) => {
     return false
 }
 
-const scheduleNextUpdateCheck = (success, version) => {
+const scheduleNextUpdateCheck = (success, version = "0.0") => {
     GM_setValue("lastUpdateCheck", {
+        last: Date.now(),
         next: Date.now() + (success ? SUCCESS_UPDATE_INTERVAL : FAILED_UPDATE_INTERVAL),
         version,
     })
 }
 
-const updateCheck = () => {
+let $updateCheckState
+
+const initUpdateCheck = () => {
     if (typeof GM_xmlhttpRequest !== "function" || typeof GM_setValue !== "function" || typeof GM_getValue !== "function") return
+
+    // add update check info in sidebar
+    $updateCheckState = $.make("div")
+    const $updateCheckInfo = $.make("div")
+            .addClass("opp-update-check")
+            .append($updateCheckState)
+            .append(
+                $.make("button")
+                        .attr("type", "button")
+                        .text("Check")
+                        .click(checkVersionOnline)
+            )
+    $releaseNotesList.before($updateCheckInfo)
+
     // don't make a server request every time to save bandwidth
     const lastUpdateCheck = GM_getValue("lastUpdateCheck", null)
     if (lastUpdateCheck === null || Date.now() > lastUpdateCheck.next) {
-        GM_xmlhttpRequest({
-            method: "GET",
-            url: UPDATE_URL,
-            anonymous: true,
-            onload({ responseText }) {
-                const versionMatch = /\/\/ @version\s+([0-9.]+)/.exec(responseText)
-                if (!versionMatch) {
-                    console.error("Oodi++ update check failed: invalid userscript received")
-                    scheduleNextUpdateCheck(false, "0.0")
-                    return
-                }
-                scheduleNextUpdateCheck(true, versionMatch[1])
-                checkVersion(versionMatch[1])
-            },
-            onerror() {
-                console.error("Oodi++ update check failed: request failed")
-                scheduleNextUpdateCheck(false, "0.0")
-            }
-        })
+        checkVersionOnline()
     } else {
         checkVersion(lastUpdateCheck.version)
+        $updateCheckState.text(`Last update check: ${new Date(lastUpdateCheck.last).toLocaleString(language)}`)
     }
 }
 
+const checkVersionOnline = () => {
+    $updateCheckState.text(`Checking for update\u2026`)
+    // load script file from server
+    GM_xmlhttpRequest({
+        method: "GET",
+        url: UPDATE_URL,
+        anonymous: true,
+        onload({ responseText }) {
+            // parse @version from metadata block
+            const versionMatch = /\/\/ @version\s+([0-9.]+)/.exec(responseText)
+            if (!versionMatch) {
+                console.error("Oodi++ update check failed: invalid userscript received")
+                $updateCheckState.text("Update check failed.")
+                scheduleNextUpdateCheck(false)
+                return
+            }
+            scheduleNextUpdateCheck(true, versionMatch[1])
+            $updateCheckState.text(`Last update check: ${new Date().toLocaleString(language)}`)
+            checkVersion(versionMatch[1])
+        },
+        onerror() {
+            console.error("Oodi++ update check failed: request failed")
+            $updateCheckState.text("Update check failed.")
+            scheduleNextUpdateCheck(false)
+        }
+    })
+}
+
 const checkVersion = upstreamVersion => {
+    // remove old update info
+    $releaseNotes.find(".opp-new-version").remove()
+
+    // add update info if a new version is available
     if (isNewer(GM_info.script.version, upstreamVersion)) {
         const $updateInfo = $.make("div").addClass("opp-new-version").append(
-            $.make("h3").text("A new version of Oodi++ is available!")
+            $.make("h3").text(`A new version of Oodi++ is available: ${upstreamVersion}!`)
         ).append(
             $.make("div")
                     .append("Click here to install it: ")
@@ -80,7 +112,7 @@ const checkVersion = upstreamVersion => {
                                 .text(UPDATE_URL)
                     )
         )
-        $sidebarContent.prepend($updateInfo)
+        $releaseNotes.prepend($updateInfo)
         requestSidebarFocus()
     }
 }

@@ -11,4 +11,4 @@
 // @require      https://code.jquery.com/jquery-3.5.1.min.js#sha256=f7f6a5894f1d19ddad6fa392b2ece2c5e578cbf7da4ea805b6885eb6985b6e3d
 // ==/UserScript==
 
-const updateCheck = () => {}
+const initUpdateCheck = () => {}
