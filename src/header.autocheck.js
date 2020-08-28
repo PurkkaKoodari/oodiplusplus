@@ -71,7 +71,8 @@ const checkVersionOnline = () => {
     // load script file from server
     GM_xmlhttpRequest({
         method: "GET",
-        url: UPDATE_URL,
+        url: `${UPDATE_URL}?_=${Date.now()}`,
+        nocache: true,
         anonymous: true,
         onload({ responseText }) {
             // parse @version from metadata block
