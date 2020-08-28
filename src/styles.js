@@ -209,6 +209,17 @@ GM_addStyle(`
 .opp-schedule-view.opp-action-remove .opp-activity a {
     pointer-events: none;
 }
+.opp-schedule .opp-activity .opp-outdated-indicator {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    border: solid black;
+    border-width: 1px 0 0 1px;
+    background: white;
+    font-size: 1.2em;
+    line-height: 1;
+    padding: 5px;
+}
 `)
 
 // flatten the blue top bar into the flex to make it flow nicer

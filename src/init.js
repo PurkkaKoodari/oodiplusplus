@@ -60,8 +60,8 @@ const loadSelectedActivities = () => {
     if (!serializedActivities) return {}
 
     const activities = {}
-    for (const {course, type, name, opetTapId, instances} of serializedActivities) {
-        const activity = new Activity(course, type, name, opetTapId)
+    for (const {course, type, name, opetTapId, dataVersion, instances} of serializedActivities) {
+        const activity = new Activity(course, type, name, opetTapId, dataVersion || 0)
         activity.instances = instances.map(({start, end, location}) => ({
             activity,
             start: new Date(start),
@@ -77,11 +77,12 @@ const loadSelectedActivities = () => {
 const saveSelectedActivities = () => {
     if (typeof GM_setValue !== "function") return
 
-    const serializedActivities = Array.from(Object.values(selectedActivities)).map(({course, type, name, opetTapId, instances}) => ({
+    const serializedActivities = Array.from(Object.values(selectedActivities)).map(({course, type, name, opetTapId, dataVersion, instances}) => ({
         course,
         type,
         name,
         opetTapId,
+        dataVersion,
         instances: instances.map(({start, end, location}) => ({
             start: start.toString(),
             end: end.toString(),

@@ -90,7 +90,9 @@ const parseOpettaptied = () => {
             // check if the activity was previously selected and needs an update
             let needsUpdate = false
             if (activity !== parsedActivity) {
-                if (activity.course.name !== parsedActivity.course.name || activity.type !== parsedActivity.type || activity.opetTapId !== parsedActivity.opetTapId) {
+                if (activity.dataVersion !== CURRENT_DATA_VERSION) {
+                    needsUpdate = true
+                } else if (activity.course.name !== parsedActivity.course.name || activity.type !== parsedActivity.type || activity.opetTapId !== parsedActivity.opetTapId) {
                     needsUpdate = true
                 } else if (activity.instances.length !== parsedActivity.instances.length) {
                     needsUpdate = true
@@ -171,11 +173,11 @@ const parseOpettaptied = () => {
     })
 
     // add notice and blink opener button if changes are detected
-    const inNeedOfUpdate = opettaptiedActivities.filter(activity => activity.updatedActivity !== null).length
-    if (inNeedOfUpdate > 0) {
-        $updateNotification = $.make("p")
+    const updateableOnThisPage = opettaptiedActivities.filter(activity => activity.updatedActivity !== null).length
+    if (updateableOnThisPage > 0) {
+        const $updateNotification = $.make("p")
                 .addClass("opp-alert-text")
-                .append(`${inNeedOfUpdate} activities on this page have changed since they were added to Oodi++. `)
+                .append(`${updateableOnThisPage} activities on this page have changed since they were added to Oodi++. `)
                 .append(
                     $.make("button")
                             .attr("type", "button")

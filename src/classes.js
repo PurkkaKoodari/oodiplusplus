@@ -2,6 +2,9 @@
 
 
 
+/** Compared to Activity.dataVersion to see which activities need an update. */
+const CURRENT_DATA_VERSION = 1
+
 /** Represents a course that contains activities. */
 class Course {
     constructor() {
@@ -17,12 +20,14 @@ class Activity {
      * @param {string} type 
      * @param {string} name 
      * @param {string} opetTapId
+     * @param {number} dataVersion
      */
-    constructor(course, type, name, opetTapId) {
+    constructor(course, type, name, opetTapId, dataVersion = CURRENT_DATA_VERSION) {
         this.course = course
         this.type = type
         this.name = name
         this.opetTapId = opetTapId
+        this.dataVersion = dataVersion
         this.instances = []
         this.updateOpettaptied = () => {}
         this.updatedActivity = null
@@ -50,6 +55,7 @@ class Activity {
         this.type = this.updatedActivity.type
         this.opetTapId = this.updatedActivity.opetTapId
         this.instances = this.updatedActivity.instances
+        this.dataVersion = CURRENT_DATA_VERSION
         this.updatedActivity = null
     }
 }

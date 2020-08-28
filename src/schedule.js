@@ -67,7 +67,7 @@ const updateScheduleView = () => {
             else weekRanges[weekRanges.length - 1].end = week
         }
         // stringify date ranges
-        const dateHeader = weekRanges.map(range => `${range.start.toLocaleDateString(language)}-${new Date(range.end.getTime() + ONE_WEEK - 1).toLocaleDateString(language)}`).join(", ")
+        const dateHeader = weekRanges.map(range => `${range.start.toLocaleDateString(language)}\u2013${new Date(range.end.getTime() + ONE_WEEK - 1).toLocaleDateString(language)}`).join(", ")
         // compute horizontal slots for overlapping instances and first/last hours
         let firstHour = 24
         let lastHour = 0
@@ -144,34 +144,47 @@ const updateScheduleView = () => {
         }
         // render instances
         for (const renderInstance of renderInstances) {
-            $schedule.append(
-                $.make("div")
-                        .addClass("opp-activity")
-                        .toggleClass("opp-hovered", hoveredActivity === renderInstance.instance.activity)
-                        .css({
-                            left: `${20 + 100 * renderInstance.weekday + 100 / columns[renderInstance.weekday] * renderInstance.columns.start}px`,
-                            top: `${20 + 60 * (renderInstance.start / ONE_HOUR - firstHour)}px`,
-                            width: `${100 / columns[renderInstance.weekday] * (renderInstance.columns.end - renderInstance.columns.start + 1)}px`,
-                            height: `${60 * (renderInstance.end - renderInstance.start) / ONE_HOUR}px`,
-                        })
-                        .append(
-                            $.make("a")
-                                    .attr("href", `https://${location.host}/a/opettaptied.jsp?OpetTap=${renderInstance.instance.activity.opetTapId}`)
-                                    .text(renderInstance.instance.activity.course.code)
-                                    // stop click events from the link from propagating to the schedule event
-                                    .click(e => e.stopPropagation())
-                        )
-                        .append(
-                            $.make("span").text(renderInstance.instance.activity.name)
-                        )
-                        .append(
-                            $.make("span").text(renderInstance.instance.location)
-                        )
-                        .click(() => scheduleClickAction(renderInstance.instance.activity))
-                        // be a bit paranoid to avoid unnecessary events
-                        .on("mouseenter", () => !scheduleUpdating && hoveredActivity !== renderInstance.instance.activity && setHoveredActivity(renderInstance.instance.activity))
-                        .on("mouseleave", () => !scheduleUpdating && hoveredActivity === renderInstance.instance.activity && setHoveredActivity(null))
-            )
+            const $instance = $.make("div")
+                    .addClass("opp-activity")
+                    .toggleClass("opp-hovered", hoveredActivity === renderInstance.instance.activity)
+                    .css({
+                        left: `${20 + 100 * renderInstance.weekday + 100 / columns[renderInstance.weekday] * renderInstance.columns.start}px`,
+                        top: `${20 + 60 * (renderInstance.start / ONE_HOUR - firstHour)}px`,
+                        width: `${100 / columns[renderInstance.weekday] * (renderInstance.columns.end - renderInstance.columns.start + 1)}px`,
+                        height: `${60 * (renderInstance.end - renderInstance.start) / ONE_HOUR}px`,
+                    })
+                    .attr("title", `${renderInstance.instance.activity.course.code} ${renderInstance.instance.activity.course.name}\n` +
+                            `${renderInstance.instance.activity.type} ${renderInstance.instance.activity.name}\n` +
+                            `${WEEKDAY_NAMES[language][renderInstance.weekday]} ${renderInstance.instance.start.toLocaleTimeString(language)}\u2013${renderInstance.instance.end.toLocaleTimeString(language)}\n` +
+                            `${renderInstance.instance.location}`)
+                    .append(
+                        $.make("a")
+                                .attr("href", `https://${location.host}/a/opettaptied.jsp?OpetTap=${renderInstance.instance.activity.opetTapId}`)
+                                .text(renderInstance.instance.activity.course.code)
+                                // stop click events from the link from propagating to the schedule event
+                                .click(e => e.stopPropagation())
+                    )
+                    .append(
+                        $.make("span").text(renderInstance.instance.activity.name)
+                    )
+                    .append(
+                        $.make("span").text(renderInstance.instance.location)
+                    )
+                    .click(() => scheduleClickAction(renderInstance.instance.activity))
+                    // be a bit paranoid to avoid unnecessary events
+                    .on("mouseenter", () => !scheduleUpdating && hoveredActivity !== renderInstance.instance.activity && setHoveredActivity(renderInstance.instance.activity))
+                    .on("mouseleave", () => !scheduleUpdating && hoveredActivity === renderInstance.instance.activity && setHoveredActivity(null))
+            $schedule.append($instance)
+        
+            // add outdatedness indicator if applicable
+            if (renderInstance.instance.activity.dataVersion < CURRENT_DATA_VERSION) {
+                $instance.append(
+                    $.make("div")
+                            .addClass("opp-outdated-indicator opp-alert-text")
+                            .text("\u26A0")
+                            .attr("title", "This activity's data is in an outdated format. Visit its course page to update it.")
+                )
+            }
         }
 
         $scheduleView
@@ -181,6 +194,18 @@ const updateScheduleView = () => {
                 .append($schedule)
     }
     scheduleUpdating = false
+    
+    // remove old data format notices
+    $(".opp-outdated-format-alert").remove()
+    // add notice and blink opener if activities use outdated data formats
+    const needDataFormatUpdate = Array.from(Object.values(selectedActivities)).filter(activity => activity.dataVersion < CURRENT_DATA_VERSION).length
+    if (needDataFormatUpdate > 0) {
+        const $updateNotification = $.make("p")
+                .addClass("opp-alert-text opp-outdated-format-alert")
+                .append(`${needDataFormatUpdate} activities are using an outdated data format. Visit their course pages to update them.`)
+        $scheduleActions.before($updateNotification)
+        requestSidebarFocus()
+    }
 }
 
 /**

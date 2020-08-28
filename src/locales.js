@@ -10,7 +10,7 @@ const COURSE_INFO_KEYS = {
 
 /** Weekday names in the default locales. */
 const WEEKDAY_NAMES = {
-    fi: ["Ma", "Ti", "Ke", "To", "Pe", "La", "Su"],
-    sv: ["Må", "Ti", "On", "To", "Fr", "Lö", "Sö"],
+    fi: ["ma", "ti", "ke", "to", "pe", "la", "su"],
+    sv: ["må", "ti", "on", "to", "fr", "lö", "sö"],
     en: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
 }
