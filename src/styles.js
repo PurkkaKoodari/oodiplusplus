@@ -2,7 +2,60 @@
 
 
 
-GM_addStyle(`
+
+const THEMES = {
+    light: {
+        background: "#fff",
+        text: "#000",
+        linkText: "#223",
+        alertText: "#a00",
+        successText: "#0a0",
+
+        settingsBackground: "#f3f3f3",
+        settingsBorder: "#000",
+
+        buttonBackground: "#eee",
+        buttonBorder: "#000",
+        buttonText: "#000",
+        buttonActiveBackground: "#ccf",
+
+        scheduleBoxBorder: "#000",
+        scheduleBoxHoverBackground1: "#eef",
+        scheduleBoxHoverBackground2: "#ccf",
+        scheduleBoxRemoveBackground1: "#fee",
+        scheduleBoxRemoveBackground2: "#fcc",
+    },
+    dark: {
+        background: "#080808",
+        text: "#fff",
+        linkText: "#ccd",
+        alertText: "#f44",
+        successText: "#1d1",
+
+        settingsBackground: "#111",
+        settingsBorder: "#fff",
+
+        buttonBackground: "#333",
+        buttonBorder: "#ccc",
+        buttonText: "#fff",
+        buttonActiveBackground: "#449",
+
+        scheduleBoxBorder: "#fff",
+        scheduleBoxHoverBackground1: "#006",
+        scheduleBoxHoverBackground2: "#118",
+        scheduleBoxRemoveBackground1: "#400",
+        scheduleBoxRemoveBackground2: "#600",
+    },
+}
+
+let themeStyle = null
+
+const setTheme = themeName => {
+    if (typeof GM_setValue === "function") GM_setValue("currentTheme", themeName)
+    const theme = THEMES[themeName]
+
+    $(themeStyle).remove()
+    themeStyle = GM_addStyle(`
 /* hack the layout to be responsive so that it can take our sidebar */
 #menu {
     position: sticky !important; /* sticky top bar - keeps the look but without fixed height */
@@ -46,20 +99,6 @@ GM_addStyle(`
 }
 
 /* styles for the sidebar container itself */
-@keyframes opp-sidebar-opener-alert {
-    0% {
-        background: #fff;
-        padding: 10px 10px;
-    }
-    50% {
-        background: #ccf;
-        padding: 10px 12px;
-    }
-    100% {
-        background: #fff;
-        padding: 10px 10px;
-    }
-}
 .opp-body-wrapper {
     position: relative;
     z-index: 0;
@@ -74,8 +113,8 @@ GM_addStyle(`
     height: 100vh;
     margin: 0;
     padding: 0;
-    border-left: 1px solid black;
-    background: white;
+    border-left: 1px solid #000;
+    background: ${theme.background};
     font-size: 14px;
 }
 .opp-sidebar-content {
@@ -90,56 +129,101 @@ GM_addStyle(`
     right: 100%;
     top: 10px;
     padding: 10px;
-    border: 1px solid black;
+    border: 1px solid #000;
     border-right: none;
     border-radius: 5px 0 0 5px;
-    background: white;
+    background: #fff; /* intentionally not styled to match main Oodi side of page */
+    color: #000;
+    font-size: 14px;
     writing-mode: vertical-rl;
     cursor: pointer;
+}
+@keyframes opp-sidebar-opener-alert {
+    0% {
+        background: #fff;
+        padding: 10px 10px;
+    }
+    50% {
+        background: #ccf;
+        padding: 10px 12px;
+    }
+    100% {
+        background: #fff;
+        padding: 10px 10px;
+    }
 }
 .opp-sidebar-opener.opp-alert {
     animation: 1s infinite ease opp-sidebar-opener-alert;
 }
 
 /* general styles for sidebar contents */
-.opp-sidebar-wrapper h2 {
+.opp-sidebar-content, .opp-sidebar-content h2, .opp-sidebar-content h3, .opp-sidebar-content h4, .opp-sidebar-content p, .opp-sidebar-content li {
+    color: ${theme.text};
+}
+.opp-sidebar-content a:link, .opp-sidebar-content a:visited, .opp-sidebar-content a:active {
+    color: ${theme.linkText};
+}
+.opp-sidebar-content h2 {
     font-size: 1.4em;
     margin: 0.4em 0;
 }
-.opp-sidebar-wrapper h3 {
+.opp-sidebar-content h3 {
     font-size: 1.25em;
     margin: 0.5em 0;
 }
-.opp-sidebar-wrapper h4 {
+.opp-sidebar-content h4 {
     font-size: 1.1em;
     margin: 0.6em 0;
 }
-.opp-sidebar-wrapper p {
+.opp-sidebar-content p {
     margin: 0.7em 0;
     padding: 0;
 }
-.opp-sidebar-wrapper ul {
+.opp-sidebar-content ul {
     margin: 0.7em 0;
     padding: 0 0 0 2em;
 }
-.opp-sidebar-wrapper button {
+.opp-sidebar-content button {
     font-size: 14px;
+    background: ${theme.buttonBackground};
+    color: ${theme.buttonText};
+    border: 1px solid ${theme.buttonBorder};
+    cursor: pointer;
 }
-.opp-alert-text {
+.opp-sidebar-content button.opp-active {
+    background: ${theme.buttonActiveBackground};
+}
+.opp-sidebar-content .opp-alert-text {
     font-weight: bold;
-    color: #a00;
+    color: ${theme.alertText};
+}
+.opp-sidebar-content .opp-success-text {
+    font-weight: bold;
+    color: ${theme.successText};
 }
 
-/* styles for sidebar header/release notes */
-.opp-whats-new {
-    margin-bottom: 10px;
+/* styles for sidebar header/release notes/settings */
+.opp-sidebar-header {
+    margin-bottom: 20px;
 }
-.opp-whats-new .opp-header, .opp-update-check {
+.opp-sidebar-header .opp-header, .opp-update-check {
     display: flex;
     align-items: baseline;
 }
-.opp-whats-new .opp-header :first-child, .opp-update-check :first-child {
+.opp-sidebar-header .opp-header :first-child, .opp-update-check :first-child {
     flex-grow: 1;
+}
+.opp-update-check {
+    margin-bottom: 10px;
+}
+.opp-sidebar-header .opp-header button {
+    margin-left: 10px;
+}
+.opp-release-notes, .opp-settings {
+    margin-top: 10px;
+    padding: 10px;
+    background: ${theme.settingsBackground};
+    border: 1px solid ${theme.settingsBorder};
 }
 
 /* styles for schedule view */
@@ -148,22 +232,12 @@ GM_addStyle(`
     top: 0;
     z-index: 2000;
     display: flex;
-    margin: -10px;
+    margin: 0 -10px -10px;
     padding: 10px;
-    background: white;
+    background: ${theme.background};
 }
 .opp-schedule-actions > * {
     margin-right: 5px;
-}
-.opp-schedule-actions button {
-    background: #eee;
-    color: black;
-    border: 1px outset black;
-    cursor: pointer;
-}
-.opp-schedule-actions button.opp-active {
-    background: #ccf;
-    border-style: inset;
 }
 .opp-schedule {
     position: relative;
@@ -177,20 +251,20 @@ GM_addStyle(`
     justify-content: center;
     align-items: center;
     box-sizing: border-box;
-    border: 1px solid black;
+    border: 1px solid ${theme.scheduleBoxBorder};
 }
 .opp-schedule .opp-hour, .opp-schedule .opp-day {
     font-weight: bold;
 }
 @keyframes opp-schedule-hovered-activity {
     0% {
-        background: #eef;
+        background: ${theme.scheduleBoxHoverBackground1};
     }
     50% {
-        background: #ccf;
+        background: ${theme.scheduleBoxHoverBackground2};
     }
     100% {
-        background: #eef;
+        background: ${theme.scheduleBoxHoverBackground1};
     }
 }
 .opp-schedule .opp-activity.opp-hovered {
@@ -198,16 +272,16 @@ GM_addStyle(`
 }
 @keyframes opp-schedule-hovered-activity-remove {
     0% {
-        background: #fee;
+        background: ${theme.scheduleBoxRemoveBackground1};
     }
     50% {
-        background: #fcc;
+        background: ${theme.scheduleBoxRemoveBackground2};
     }
     100% {
-        background: #fee;
+        background: ${theme.scheduleBoxRemoveBackground1};
     }
 }
-.opp-schedule-view.opp-action-remove .opp-activity:hover {
+.opp-schedule-view.opp-action-remove .opp-activity.opp-hovered {
     animation: 1s infinite ease opp-schedule-hovered-activity-remove;
     cursor: pointer;
 }
@@ -218,14 +292,21 @@ GM_addStyle(`
     position: absolute;
     right: 0;
     bottom: 0;
-    border: solid black;
+    border: solid ${theme.scheduleBoxBorder};
     border-width: 1px 0 0 1px;
-    background: white;
+    background: ${theme.background};
     font-size: 1.2em;
     line-height: 1;
     padding: 5px;
 }
-`)
+    `)
+}
+
+// load current theme setting
+let currentTheme = typeof GM_getValue === "function" ? GM_getValue("currentTheme") : null
+if (!["light", "dark"].includes(currentTheme)) currentTheme = "light"
+
+setTheme(currentTheme)
 
 // flatten the blue top bar into the flex to make it flow nicer
 $(".menu-content-wrapper").append($(".menu-topbar-actions-wrapper").children())

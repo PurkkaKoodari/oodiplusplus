@@ -54,7 +54,7 @@ const initUpdateCheck = () => {
                         .text("Check")
                         .click(checkVersionOnline)
             )
-    $releaseNotesList.before($updateCheckInfo)
+    $releaseNotes.before($updateCheckInfo)
 
     // don't make a server request every time to save bandwidth
     const lastUpdateCheck = GM_getValue("lastUpdateCheck", null)
@@ -97,7 +97,7 @@ const checkVersionOnline = () => {
 
 const checkVersion = upstreamVersion => {
     // remove old update info
-    $releaseNotes.find(".opp-new-version").remove()
+    $sidebarHeader.find(".opp-new-version").remove()
 
     // add update info if a new version is available
     if (isNewer(GM_info.script.version, upstreamVersion)) {
@@ -115,7 +115,7 @@ const checkVersion = upstreamVersion => {
                                 .text(UPDATE_URL)
                     )
         )
-        $releaseNotes.prepend($updateInfo)
+        $sidebarHeader.prepend($updateInfo)
         requestSidebarFocus()
     }
 }
