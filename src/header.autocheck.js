@@ -101,7 +101,9 @@ const checkVersion = upstreamVersion => {
     // add update info if a new version is available
     if (isNewer(GM_info.script.version, upstreamVersion)) {
         const $updateInfo = $.make("div").addClass("opp-new-version").append(
-            $.make("h3").text(`A new version of Oodi++ is available: ${upstreamVersion}!`)
+            $.make("h3")
+                    .addClass("opp-alert-text")
+                    .text(`A new version of Oodi++ is available: ${upstreamVersion}!`)
         ).append(
             $.make("div")
                     .append("Click here to install it, then refresh the page: ")

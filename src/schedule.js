@@ -3,6 +3,7 @@
 
 
 const updateScheduleView = () => {
+    scheduleUpdating = true
     // nuke the current tables
     $scheduleView.empty()
 
@@ -59,7 +60,6 @@ const updateScheduleView = () => {
     schedules.sort((lhs, rhs) => lhs.weeks[0].getTime() - rhs.weeks[0].getTime())
 
     for (const schedule of schedules) {
-        console.log(schedule)
         // transform list of weeks into list of ranges
         const weekRanges = [{start: schedule.weeks[0], end: schedule.weeks[0]}]
         for (const week of schedule.weeks.slice(1)) {
@@ -147,17 +147,19 @@ const updateScheduleView = () => {
             $schedule.append(
                 $.make("div")
                         .addClass("opp-activity")
+                        .toggleClass("opp-hovered", hoveredActivity === renderInstance.instance.activity)
                         .css({
                             left: `${20 + 100 * renderInstance.weekday + 100 / columns[renderInstance.weekday] * renderInstance.columns.start}px`,
                             top: `${20 + 60 * (renderInstance.start / ONE_HOUR - firstHour)}px`,
                             width: `${100 / columns[renderInstance.weekday] * (renderInstance.columns.end - renderInstance.columns.start + 1)}px`,
                             height: `${60 * (renderInstance.end - renderInstance.start) / ONE_HOUR}px`,
-                            background: hoveredActivity !== null && renderInstance.instance.activity.identifier === hoveredActivity.identifier ? "#ddf" : "#fff",
                         })
                         .append(
                             $.make("a")
-                                    .attr("href", renderInstance.instance.activity.url)
+                                    .attr("href", `https://${location.host}/a/opettaptied.jsp?OpetTap=${renderInstance.instance.activity.opetTapId}`)
                                     .text(renderInstance.instance.activity.course.code)
+                                    // stop click events from the link from propagating to the schedule event
+                                    .click(e => e.stopPropagation())
                         )
                         .append(
                             $.make("span").text(renderInstance.instance.activity.name)
@@ -165,6 +167,10 @@ const updateScheduleView = () => {
                         .append(
                             $.make("span").text(renderInstance.instance.location)
                         )
+                        .click(() => scheduleClickAction(renderInstance.instance.activity))
+                        // be a bit paranoid to avoid unnecessary events
+                        .on("mouseenter", () => !scheduleUpdating && hoveredActivity !== renderInstance.instance.activity && setHoveredActivity(renderInstance.instance.activity))
+                        .on("mouseleave", () => !scheduleUpdating && hoveredActivity === renderInstance.instance.activity && setHoveredActivity(null))
             )
         }
 
@@ -174,9 +180,64 @@ const updateScheduleView = () => {
                 )
                 .append($schedule)
     }
+    scheduleUpdating = false
 }
 
-const $scheduleView = $.make("div")
-$sidebarContent.append($scheduleView)
+/**
+ * @param {Activity} activity 
+ */
+const removeActivityFromSchedule = activity => {
+    // unselect the activity
+    delete selectedActivities[activity.identifier]
+    saveSelectedActivities()
+    // stop hovering the activity
+    if (hoveredActivity === activity) setHoveredActivity(null)
+    // update UI
+    updateScheduleView()
+    activity.updateOpettaptied()
+    // only delete one per click
+    setScheduleAction(null)()
+}
+
+let scheduleClickAction = () => {}
+let scheduleClickActionClass = "none"
+
+const setScheduleAction = (action, actionClass = "none") => function () {
+    // cancel on second click
+    if (scheduleClickAction === action) {
+        setScheduleAction(null)()
+        return
+    }
+    // update schedule view mode
+    $scheduleView.removeClass(scheduleClickActionClass)
+    scheduleClickActionClass = `opp-action-${actionClass}`
+    $scheduleView.addClass(scheduleClickActionClass)
+    // deactivate any currently active buttons
+    $(".opp-schedule-actions button").removeClass("opp-active")
+    if (action !== null) {
+        scheduleClickAction = action
+        $(this).addClass("opp-active")
+    } else {
+        scheduleClickAction = () => {}
+    }
+}
+
+const $scheduleActions = $.make("div")
+        .addClass("opp-schedule-actions")
+        .append(
+            $.make("div").text("Schedule tools:")
+        )
+        .append(
+            $.make("button")
+                    .attr("type", "button")
+                    .text("Remove")
+                    .click(setScheduleAction(removeActivityFromSchedule, "remove"))
+        )
+
+const $scheduleView = $.make("div").addClass("opp-schedule-view")
+$sidebarContent.append($scheduleActions).append($scheduleView)
+
+/** Don't run events while schedule is updating to avoid events being triggered due to elements appearing/disappearing. */
+let scheduleUpdating = false
 
 updateScheduleView()

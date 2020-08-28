@@ -60,8 +60,8 @@ const loadSelectedActivities = () => {
     if (!serializedActivities) return {}
 
     const activities = {}
-    for (const {course, type, name, url, instances} of serializedActivities) {
-        const activity = new Activity(course, type, name, url)
+    for (const {course, type, name, opetTapId, instances} of serializedActivities) {
+        const activity = new Activity(course, type, name, opetTapId)
         activity.instances = instances.map(({start, end, location}) => ({
             activity,
             start: new Date(start),
@@ -77,11 +77,11 @@ const loadSelectedActivities = () => {
 const saveSelectedActivities = () => {
     if (typeof GM_setValue !== "function") return
 
-    const serializedActivities = Array.from(Object.values(selectedActivities)).map(({course, type, name, url, instances}) => ({
+    const serializedActivities = Array.from(Object.values(selectedActivities)).map(({course, type, name, opetTapId, instances}) => ({
         course,
         type,
         name,
-        url,
+        opetTapId,
         instances: instances.map(({start, end, location}) => ({
             start: start.toString(),
             end: end.toString(),
@@ -91,13 +91,29 @@ const saveSelectedActivities = () => {
     GM_setValue("selectedActivities", serializedActivities)
 }
 
-/** The currently selected activities. */
+/**
+ * The currently selected activities.
+ * @type {Object<string, Activity>}
+ */
 const selectedActivities = loadSelectedActivities()
-/** The currently hovered activity, may be in selectedActivities. */
+
+/**
+ * The currently hovered activity, may be in selectedActivities.
+ * @type {Activity|null}
+ */
 let hoveredActivity = null
 
+/**
+ * Sets the hovered activity and updates all activity UI.
+ * @param {Activity|null} activity
+ */
+const setHoveredActivity = activity => {
+    hoveredActivity = activity
+    updateActivities()
+}
 
-
-
-// flatten the blue top bar into the flex to make it flow nicer
-$(".menu-content-wrapper").append($(".menu-topbar-actions-wrapper").children())
+/** Updates all activity UI. */
+const updateActivities = () => {
+    updateScheduleView()
+    for (const opettaptiedActivity of opettaptiedActivities) opettaptiedActivity.updateOpettaptied()
+}

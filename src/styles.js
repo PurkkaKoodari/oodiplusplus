@@ -7,7 +7,6 @@ GM_addStyle(`
 #menu {
     position: sticky !important; /* sticky top bar - keeps the look but without fixed height */
 }
-/* un-position these top bar parts/* sticky top bar - keeps the look but without fixed height */
 .menu-topbar {
     position: static !important; /* this is normally absolute-positioned, but we need it to consume space */
     padding-right: 32px !important; /* make space for the sidebar button */
@@ -33,23 +32,32 @@ GM_addStyle(`
     padding: 0 10px 10px !important;
 }
 
+/* styles for classes injected to opettaptied.jsp */
 .opp-hovered-activity {
-    background: #ddf;
+    background: #ccf;
 }
-.opp-hovered-activity td {
+.opp-hovered-activity td, .opp-hovered-activity table {
     background: transparent !important;
 }
+.opp-activity-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
 
-/* styles for the sidebar */
+/* styles for the sidebar container itself */
 @keyframes opp-sidebar-opener-alert {
     0% {
         background: #fff;
+        padding: 10px 10px;
     }
     50% {
         background: #ccf;
+        padding: 10px 12px;
     }
     100% {
         background: #fff;
+        padding: 10px 10px;
     }
 }
 .opp-body-wrapper {
@@ -69,21 +77,6 @@ GM_addStyle(`
     border-left: 1px solid black;
     background: white;
     font-size: 14px;
-}
-.opp-sidebar-wrapper h2 {
-    font-size: 1.4em;
-    margin: 0.4em 0;
-}
-.opp-sidebar-wrapper h3 {
-    font-size: 1.25em;
-    margin: 0.5em 0;
-}
-.opp-sidebar-wrapper h4 {
-    font-size: 1.1em;
-    margin: 0.6em 0;
-}
-.opp-sidebar-wrapper p, .opp-sidebar-wrapper ul {
-    margin: 0.7em 0;
 }
 .opp-sidebar-content {
     width: 540px;
@@ -108,6 +101,36 @@ GM_addStyle(`
     animation: 1s infinite ease opp-sidebar-opener-alert;
 }
 
+/* general styles for sidebar contents */
+.opp-sidebar-wrapper h2 {
+    font-size: 1.4em;
+    margin: 0.4em 0;
+}
+.opp-sidebar-wrapper h3 {
+    font-size: 1.25em;
+    margin: 0.5em 0;
+}
+.opp-sidebar-wrapper h4 {
+    font-size: 1.1em;
+    margin: 0.6em 0;
+}
+.opp-sidebar-wrapper p {
+    margin: 0.7em 0;
+    padding: 0;
+}
+.opp-sidebar-wrapper ul {
+    margin: 0.7em 0;
+    padding: 0 0 0 2em;
+}
+.opp-sidebar-wrapper button {
+    font-size: 14px;
+}
+.opp-alert-text {
+    font-weight: bold;
+    color: #a00;
+}
+
+/* styles for sidebar header/release notes */
 .opp-whats-new {
     margin-bottom: 10px;
 }
@@ -118,10 +141,25 @@ GM_addStyle(`
 .opp-whats-new .opp-header :first-child, .opp-update-check :first-child {
     flex-grow: 1;
 }
-.opp-new-version h3 {
-    color: #900;
-}
 
+/* styles for schedule view */
+.opp-schedule-actions {
+    position: sticky;
+    display: flex;
+}
+.opp-schedule-actions > * {
+    margin-right: 5px;
+}
+.opp-schedule-actions button {
+    background: #eee;
+    color: black;
+    border: 1px outset black;
+    cursor: pointer;
+}
+.opp-schedule-actions button.opp-active {
+    background: #ccf;
+    border-style: inset;
+}
 .opp-schedule {
     position: relative;
     margin: 0 -10px;
@@ -139,4 +177,39 @@ GM_addStyle(`
 .opp-schedule .opp-hour, .opp-schedule .opp-day {
     font-weight: bold;
 }
+@keyframes opp-schedule-hovered-activity {
+    0% {
+        background: #eef;
+    }
+    50% {
+        background: #ccf;
+    }
+    100% {
+        background: #eef;
+    }
+}
+.opp-schedule .opp-activity.opp-hovered {
+    animation: 1s infinite ease opp-schedule-hovered-activity;
+}
+@keyframes opp-schedule-hovered-activity-remove {
+    0% {
+        background: #fee;
+    }
+    50% {
+        background: #fcc;
+    }
+    100% {
+        background: #fee;
+    }
+}
+.opp-schedule-view.opp-action-remove .opp-activity:hover {
+    animation: 1s infinite ease opp-schedule-hovered-activity-remove;
+    cursor: pointer;
+}
+.opp-schedule-view.opp-action-remove .opp-activity a {
+    pointer-events: none;
+}
 `)
+
+// flatten the blue top bar into the flex to make it flow nicer
+$(".menu-content-wrapper").append($(".menu-topbar-actions-wrapper").children())

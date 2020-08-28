@@ -1,5 +1,5 @@
 MAINFILES=src/classes.js src/locales.js src/init.js src/styles.js src/sidebar.js src/schedule.js src/opettaptied.js src/whatsnew.js
-VERSION=0.1.9
+VERSION=0.1.10
 
 userscripts: oodiplusplus.autoupdate.user.js oodiplusplus.autocheck.user.js oodiplusplus.folio.user.js
 

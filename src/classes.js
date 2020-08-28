@@ -16,14 +16,16 @@ class Activity {
      * @param {Course} course 
      * @param {string} type 
      * @param {string} name 
-     * @param {string} url 
+     * @param {string} opetTapId
      */
-    constructor(course, type, name, url) {
+    constructor(course, type, name, opetTapId) {
         this.course = course
         this.type = type
         this.name = name
-        this.url = url
+        this.opetTapId = opetTapId
         this.instances = []
+        this.updateOpettaptied = () => {}
+        this.updatedActivity = null
     }
 
     /** An identifier for the activity that is considered unique. */
@@ -39,6 +41,16 @@ class Activity {
     /** Checks whether or not all instances of this activity are in the past. */
     get inPast() {
         return this.instances.every(instance => instance.start.getTime() < thisMonday.getTime())
+    }
+
+    /** Updates this activity from the parsed activity. */
+    update() {
+        if (!this.updatedActivity) throw new Error("nothing to update")
+        this.course = this.updatedActivity.course
+        this.type = this.updatedActivity.type
+        this.opetTapId = this.updatedActivity.opetTapId
+        this.instances = this.updatedActivity.instances
+        this.updatedActivity = null
     }
 }
 
@@ -60,6 +72,12 @@ class Instance {
 
 /** Holds preprocessed data of an Instance for the purposes of timetable rendering. */
 class RenderInstance {
+    /**
+     * @param {Instance} instance 
+     * @param {number} weekday 
+     * @param {number} start 
+     * @param {number} end 
+     */
     constructor(instance, weekday, start, end) {
         this.instance = instance
         this.weekday = weekday

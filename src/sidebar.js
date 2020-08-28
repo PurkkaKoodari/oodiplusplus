@@ -21,8 +21,13 @@ const $sidebarOpener = $.make("button")
     $bodyWrapper.animate({marginRight: sidebarOpen ? "540px" : "0"})
     $sidebarWrapper.animate({width: sidebarOpen ? "540px" : "0"})
     if (sidebarOpen) {
+        // when opening, stop the open button blinking
         $sidebarOpener.removeClass("opp-alert")
+        // and mark release notes as seen
         whatsNewSeen()
+    } else {
+        // when closing, deselect schedule actions
+        setScheduleAction(null)()
     }
 })
 

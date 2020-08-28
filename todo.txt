@@ -5,6 +5,7 @@ TODO:
 - resizable schedule view
 - add ical/ics export
 - add course tooltips in schedule
-- add option to remove from schedule
 - (automatically?) prune activities in past
+- add coloring of activities
+- blink opener button if updated activities are found
 - add image gallery to README when the ui is nicer

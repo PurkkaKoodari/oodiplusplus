@@ -2,7 +2,16 @@
 
 
 
+/**
+ * All activities parsed from opettaptied.jsp.
+ * @type {Activity[]}
+ */
+const opettaptiedActivities = []
+
 const parseOpettaptied = () => {
+    // parse OpetTap from url
+    const opetTapIdMatch = /\bOpetTap=(\d+)\b/.exec(location.search)
+    const opetTapId = opetTapIdMatch && opetTapIdMatch[1]
     // find and parse basic course information at the start of the page
     const courseInfo = new Course()
     const $root = $("#legacy-page-wrapper")
@@ -25,7 +34,7 @@ const parseOpettaptied = () => {
         })
     })
     // if we can't find these, there's very little we can do
-    if (!courseInfo.code || !courseInfo.name) {
+    if (!courseInfo.code || !courseInfo.name || !opetTapId) {
         console.error("Oodi++ couldn't parse course name or code from the page.")
         return
     }
@@ -47,7 +56,9 @@ const parseOpettaptied = () => {
             // if we can't find a name, we can't do much
             if (!activityName) return
 
-            const activity = new Activity(courseInfo, activityType, activityName, location.href)
+            // reuse activity from selectedActivities if one exists
+            const parsedActivity = new Activity(courseInfo, activityType, activityName, opetTapId)
+            const activity = parsedActivity.identifier in selectedActivities ? selectedActivities[parsedActivity.identifier] : parsedActivity
 
             // walk all date/time/location specifiers for this activity
             $(this).children("td:nth-child(3)").children("table").children("tbody") // table in third cell of this row
@@ -70,47 +81,116 @@ const parseOpettaptied = () => {
                     end.setMinutes(+minute2)
                     // handle potential day rollover (badly)
                     if (end.getTime() < start.getTime()) end.setTime(end.getTime() + ONE_DAY)
-                    activity.instances.push(new Instance(activity, start, end, location))
+                    // add the instances to the parsed activity, but make them refer to the actual one - parsedActivity is just a dumb container
+                    parsedActivity.instances.push(new Instance(activity, start, end, location))
                 }
             })
 
+            // check if the activity was previously selected and needs an update
+            let needsUpdate = false
+            if (activity !== parsedActivity) {
+                if (activity.course.name !== parsedActivity.course.name || activity.type !== parsedActivity.type || activity.opetTapId !== parsedActivity.opetTapId) {
+                    needsUpdate = true
+                } else if (activity.instances.length !== parsedActivity.instances.length) {
+                    needsUpdate = true
+                } else {
+                    for (let i = 0; i < activity.instances.length; i++) {
+                        const instance = activity.instances[i]
+                        const parsedInstance = parsedActivity.instances[i]
+                        if (instance.start.getTime() !== parsedInstance.start.getTime() || instance.end.getTime() !== parsedInstance.end.getTime() || instance.location !== parsedInstance.location) {
+                            needsUpdate = true
+                            break
+                        }
+                    }
+                }
+            }
+            if (needsUpdate) activity.updatedActivity = parsedActivity
+
+            // don't add anything to activities without instances
+            if (!activity.selected && !activity.instances.length) return
+
+            opettaptiedActivities.push(activity)
+
+            // create "Add to Oodi++" button
             const $selectButton = $.make("button")
                     .attr("type", "button")
                     .click(() => {
                 if (activity.selected) delete selectedActivities[activity.identifier]
                 else selectedActivities[activity.identifier] = activity
                 saveSelectedActivities()
-                updateSelectButton()
                 updateScheduleView()
+                activity.updateOpettaptied()
                 requestSidebarFocus()
             })
+            // create "Update in Oodi++" button
+            const $updateButton = $.make("button")
+                    .attr("type", "button")
+                    .text("Update in Oodi++")
+                    .attr("title", "Click to update the activity with the same name in Oodi++ with the details from this page")
+                    .click(() => {
+                activity.update()
+                saveSelectedActivities()
+                updateScheduleView()
+                activity.updateOpettaptied()
+            })
 
-            const updateSelectButton = () => {
-                $selectButton.prop("disabled", activity.inPast && !activity.selected).text(activity.selected ? "Remove from Oodi++" : "Add to Oodi++")
+            // method to update the stuff added to this page
+            activity.updateOpettaptied = () => {
+                // update hover state
+                $(this).parent().closest("tr").toggleClass("opp-hovered-activity", hoveredActivity === activity)
+                // make select button active/inactive and update its text
+                $selectButton
+                        .prop("disabled", activity.inPast && !activity.selected)
+                        .text(activity.selected ? "Remove from Oodi++" : "Add to Oodi++")
+                // show update button if necessary
+                $updateButton.toggle(activity.updatedActivity !== null && !activity.inPast)
             }
-            updateSelectButton()
+            activity.updateOpettaptied()
 
-            if (!activity.instances.length) return
+            // add actions to row
+            $(this).children("td:nth-child(3)").append(
+                $.make("div")
+                        .addClass("opp-activity-actions")
+                        .append($selectButton)
+                        .append($updateButton)
+            )
 
-            $(this).children("td:nth-child(3)").append($selectButton)
-
+            // add explanation if activity is in the past
             if (activity.inPast) {
                 $selectButton.after(
-                    $.make("span").text("This activity is in the past.")
+                    $.make("div").text("This activity is in the past.")
                 )
             }
 
-            $(this).parent().closest("tr").on("mouseenter", function () {
-                $(this).addClass("opp-hovered-activity")
-                hoveredActivity = activity
-                updateScheduleView()
-            }).on("mouseleave", function () {
-                $(this).removeClass("opp-hovered-activity")
-                if (hoveredActivity === activity) hoveredActivity = null
-                updateScheduleView()
-            })
+            // add hover listeners
+            $(this).parent().closest("tr")
+                    .on("mouseenter", () => setHoveredActivity(activity))
+                    .on("mouseleave", () => hoveredActivity === activity && setHoveredActivity(null))
         })
     })
+
+    // add notice and blink opener button if changes are detected
+    const inNeedOfUpdate = opettaptiedActivities.filter(activity => activity.updatedActivity !== null).length
+    if (inNeedOfUpdate > 0) {
+        $updateNotification = $.make("p")
+                .addClass("opp-alert-text")
+                .append(`${inNeedOfUpdate} activities on this page have changed since they were added to Oodi++. `)
+                .append(
+                    $.make("button")
+                            .attr("type", "button")
+                            .text("Update all")
+                            .click(() => {
+                                for (const activity of opettaptiedActivities) {
+                                    if (activity.updatedActivity !== null) activity.update()
+                                }
+                                saveSelectedActivities()
+                                updateActivities()
+                                $updateNotification.remove()
+                            })
+                )
+        $scheduleActions.before($updateNotification)
+        requestSidebarFocus()
+    }
 }
 
 if (location.pathname.startsWith("/a/opettaptied.jsp")) {

@@ -1,5 +1,14 @@
 const CHANGELOG = [
     {
+        version: "0.2",
+        changes: [
+            "Activities can now be removed and colored in schedule view",
+            "Activity details can be updated by visiting the course page",
+            "Added activity tooltips in schedule view",
+            "NOTE: Links in the schedule view will be broken until activities are updated by visiting the course page manually. This is due to a data format change and will not occur with future updates.",
+        ],
+    },
+    {
         version: "0.1",
         changes: [
             "Initial public release",
