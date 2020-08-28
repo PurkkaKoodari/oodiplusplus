@@ -145,7 +145,12 @@ GM_addStyle(`
 /* styles for schedule view */
 .opp-schedule-actions {
     position: sticky;
+    top: 0;
+    z-index: 2000;
     display: flex;
+    margin: -10px;
+    padding: 10px;
+    background: white;
 }
 .opp-schedule-actions > * {
     margin-right: 5px;
