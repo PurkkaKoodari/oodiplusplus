@@ -44,7 +44,8 @@ const parseOpettaptied = () => {
 
         // activity type, such as "Lecture" or "Exercise"
         const activityType = $(this).children("tr").first().children("th:nth-child(3)").children("table").children("tbody") // first (header) row of .kll, table inside third cell
-                .children("tr:nth-child(2)").children("th:nth-child(1)").text().trim() // second row of inner table, first cell
+                .children("tr").children("th").children("table").children("tbody") // only cell of this table (yes, wtf?)
+                .children("tr:last-child").children("th:nth-child(1)").text().trim() // last (second) row of inner table, first cell
 
         // walk all options for this activity
         $(this).children("tr").slice(1).children("td:nth-child(3)").children("table").children("tbody") // all rows except first of .kll, table inside third cell
