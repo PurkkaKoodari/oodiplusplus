@@ -26,6 +26,9 @@ class Course {
 
     /** Deserializes a course from the form outputted by serialize(). */
     static deserialize({code, name}) {
+        if (typeof code !== "string" || !code) throw new Error("missing course code")
+        if (typeof name !== "string" || !name) throw new Error("missing course name")
+
         return new Course(code, name)
     }
 }
@@ -93,7 +96,7 @@ class Activity {
             name: this.name,
             opetTapId: this.opetTapId,
             dataVersion: this.dataVersion,
-            lastUpdate: this.lastUpdate.toString(),
+            lastUpdate: this.lastUpdate.toISOString(),
             instances: this.instances.map(instance => instance.serialize()),
         }
     }
@@ -101,7 +104,16 @@ class Activity {
     /** Deserializes an activity from the form outputted by serialize(). */
     static deserialize({course, type, name, opetTapId, lastUpdate, dataVersion, instances}) {
         const courseObj = Course.deserialize(course)
-        const activity = new Activity(courseObj, type, name, opetTapId, new Date(lastUpdate || new Date()), dataVersion || 0)
+
+        if (typeof type !== "string") throw new Error("invalid activity type")
+        if (typeof name !== "string" || !name) throw new Error("missing activity name")
+        if (opetTapId && typeof opetTapId !== "string") throw new Error("invalid activity opetTapId")
+        const lastUpdateDate = new Date(lastUpdate || new Date())
+        if (isNaN(lastUpdateDate.getTime())) throw new Error("invalid activity lastUpdate")
+        const dataVersionNum = dataVersion || 0
+        if (typeof dataVersionNum !== "number") throw new Error("invalid activity dataVersion")
+
+        const activity = new Activity(courseObj, type, name, opetTapId, lastUpdateDate, dataVersionNum)
         activity.instances = instances.map(serializedInstance => Instance.deserialize(activity, serializedInstance))
         return activity
     }
@@ -125,15 +137,21 @@ class Instance {
     /** Serializes this instance to a JSON-compatible object. */
     serialize() {
         return {
-            start: this.start.toString(),
-            end: this.end.toString(),
+            start: this.start.toISOString(),
+            end: this.end.toISOString(),
             location: this.location,
         }
     }
 
     /** Deserializes an instance from the form outputted by serialize(). */
     static deserialize(activity, {start, end, location}) {
-        return new Instance(activity, new Date(start), new Date(end), location)
+        const startDate = new Date(start)
+        if (isNaN(startDate.getTime())) throw new Error("invalid instance start")
+        const endDate = new Date(end)
+        if (isNaN(endDate.getTime())) throw new Error("invalid instance end")
+        if (typeof location !== "string") throw new Error("invalid instance location")
+
+        return new Instance(activity, startDate, endDate, location)
     }
 }
 

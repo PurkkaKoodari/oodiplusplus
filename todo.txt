@@ -2,7 +2,6 @@ TODO:
 - fix text overflowing in timetable
 - add backend sync
 - resizable schedule view
-- add ical/ics export
 - (automatically?) prune activities in past
 - add coloring of activities
 - configurable exported event titles
