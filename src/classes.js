@@ -7,9 +7,26 @@ const CURRENT_DATA_VERSION = 1
 
 /** Represents a course that contains activities. */
 class Course {
-    constructor() {
-        this.code = null
-        this.name = null
+    /**
+     * @param {string} code 
+     * @param {string} name 
+     */
+    constructor(code, name) {
+        this.code = code
+        this.name = name
+    }
+
+    /** Serializes this course to a JSON-compatible object. */
+    serialize() {
+        return {
+            code: this.code,
+            name: this.name,
+        }
+    }
+
+    /** Deserializes a course from the form outputted by serialize(). */
+    static deserialize({code, name}) {
+        return new Course(code, name)
     }
 }
 
@@ -20,16 +37,24 @@ class Activity {
      * @param {string} type 
      * @param {string} name 
      * @param {string} opetTapId
+     * @param {Date} lastUpdate
      * @param {number} dataVersion
      */
-    constructor(course, type, name, opetTapId, dataVersion = CURRENT_DATA_VERSION) {
+    constructor(course, type, name, opetTapId, lastUpdate, dataVersion = CURRENT_DATA_VERSION) {
         this.course = course
         this.type = type
         this.name = name
         this.opetTapId = opetTapId
         this.dataVersion = dataVersion
+        this.lastUpdate = lastUpdate
+        /**
+         * @type {Instance[]}
+         */
         this.instances = []
         this.updateOpettaptied = () => {}
+        /**
+         * @type {Activity|null}
+         */
         this.updatedActivity = null
     }
 
@@ -56,7 +81,29 @@ class Activity {
         this.opetTapId = this.updatedActivity.opetTapId
         this.instances = this.updatedActivity.instances
         this.dataVersion = CURRENT_DATA_VERSION
+        this.lastUpdate = this.updatedActivity.lastUpdate
         this.updatedActivity = null
+    }
+
+    /** Serializes this activity to a JSON-compatible object. */
+    serialize() {
+        return {
+            course: this.course.serialize(),
+            type: this.type,
+            name: this.name,
+            opetTapId: this.opetTapId,
+            dataVersion: this.dataVersion,
+            lastUpdate: this.lastUpdate.toString(),
+            instances: this.instances.map(instance => instance.serialize()),
+        }
+    }
+
+    /** Deserializes an activity from the form outputted by serialize(). */
+    static deserialize({course, type, name, opetTapId, lastUpdate, dataVersion, instances}) {
+        const courseObj = Course.deserialize(course)
+        const activity = new Activity(courseObj, type, name, opetTapId, lastUpdate || new Date(), dataVersion || 0)
+        activity.instances = instances.map(serializedInstance => Instance.deserialize(activity, serializedInstance))
+        return activity
     }
 }
 
@@ -73,6 +120,20 @@ class Instance {
         this.start = start
         this.end = end
         this.location = location
+    }
+
+    /** Serializes this instance to a JSON-compatible object. */
+    serialize() {
+        return {
+            start: this.start.toString(),
+            end: this.end.toString(),
+            location: this.location,
+        }
+    }
+
+    /** Deserializes an instance from the form outputted by serialize(). */
+    static deserialize(activity, {start, end, location}) {
+        return new Instance(activity, new Date(start), new Date(end), location)
     }
 }
 

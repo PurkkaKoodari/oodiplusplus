@@ -13,7 +13,7 @@ const parseOpettaptied = () => {
     const opetTapIdMatch = /\bOpetTap=(\d+)\b/.exec(location.search)
     const opetTapId = opetTapIdMatch && opetTapIdMatch[1]
     // find and parse basic course information at the start of the page
-    const courseInfo = new Course()
+    const courseInfo = {}
     const $root = $("#legacy-page-wrapper")
     // the information is in a table inside a single-cell table
     $root.children("table").first().find("table tr").each(function () {
@@ -38,6 +38,7 @@ const parseOpettaptied = () => {
         console.error("Oodi++ couldn't parse course name or code from the page.")
         return
     }
+    const course = new Course(courseInfo.code, courseInfo.name)
 
     // walk each activity type table
     $("form[name=ilmotForm] > table.kll > tbody").each(function () {
@@ -58,7 +59,7 @@ const parseOpettaptied = () => {
             if (!activityName) return
 
             // reuse activity from selectedActivities if one exists
-            const parsedActivity = new Activity(courseInfo, activityType, activityName, opetTapId)
+            const parsedActivity = new Activity(course, activityType, activityName, opetTapId, new Date())
             const activity = parsedActivity.identifier in selectedActivities ? selectedActivities[parsedActivity.identifier] : parsedActivity
 
             // walk all date/time/location specifiers for this activity
