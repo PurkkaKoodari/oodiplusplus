@@ -17,6 +17,7 @@ const THEMES = {
         buttonBackground: "#eee",
         buttonBorder: "#000",
         buttonText: "#000",
+        buttonHoverBackground: "#f3f3f3",
         buttonActiveBackground: "#ccf",
 
         scheduleBoxBorder: "#000",
@@ -38,6 +39,7 @@ const THEMES = {
         buttonBackground: "#333",
         buttonBorder: "#ccc",
         buttonText: "#fff",
+        buttonHoverBackground: "#444",
         buttonActiveBackground: "#449",
 
         scheduleBoxBorder: "#fff",
@@ -189,6 +191,9 @@ const setTheme = themeName => {
     color: ${theme.buttonText};
     border: 1px solid ${theme.buttonBorder};
     cursor: pointer;
+}
+.opp-sidebar-content button:hover {
+    background: ${theme.buttonHoverBackground};
 }
 .opp-sidebar-content button.opp-active {
     background: ${theme.buttonActiveBackground};
