@@ -101,7 +101,7 @@ class Activity {
     /** Deserializes an activity from the form outputted by serialize(). */
     static deserialize({course, type, name, opetTapId, lastUpdate, dataVersion, instances}) {
         const courseObj = Course.deserialize(course)
-        const activity = new Activity(courseObj, type, name, opetTapId, lastUpdate || new Date(), dataVersion || 0)
+        const activity = new Activity(courseObj, type, name, opetTapId, new Date(lastUpdate || new Date()), dataVersion || 0)
         activity.instances = instances.map(serializedInstance => Instance.deserialize(activity, serializedInstance))
         return activity
     }
