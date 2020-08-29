@@ -258,6 +258,12 @@ const $scheduleActions = $.make("div")
                     .text("Remove")
                     .click(setScheduleAction(removeActivityFromSchedule, "remove"))
         )
+        .append(
+            $.make("button")
+                    .attr("type", "button")
+                    .text("Export iCal")
+                    .click(() => exportSelectedActivitiesAsIcal())
+        )
 
 const $scheduleView = $.make("div").addClass("opp-schedule-view")
 $sidebarContent.append($scheduleActions).append($scheduleView)
