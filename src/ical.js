@@ -83,14 +83,5 @@ END:VEVENT
 /** Converts selectedActivities to iCal format and opens a download dialog for the file. */
 const exportSelectedActivitiesAsIcal = () => {
     const icalContents = createIcalFromActivities(Object.values(selectedActivities))
-    const icalBlob = new Blob([icalContents], {type: "text/calendar"})
-    const objectUrl = URL.createObjectURL(icalBlob)
-    const $link = $.make("a")
-            .attr("href", objectUrl)
-            .attr("download", "oodiplusplus.ics")
-            .hide()
-            .appendTo("body")
-    $link[0].click()
-    $link.remove()
-    URL.revokeObjectURL(objectUrl)
+    downloadFile(icalContents, "oodiplusplus.ics", "text/calendar")
 }

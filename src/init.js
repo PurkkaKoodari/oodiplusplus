@@ -53,12 +53,8 @@ while (thisMonday.getDay() != 1) thisMonday.setTime(thisMonday.getTime() - ONE_D
 
 
 
-/** Attempts to load selectedActivities from the userscript storage. */
-const loadSelectedActivities = () => {
-    if (typeof GM_getValue !== "function") return {}
-    const serializedActivities = GM_getValue("selectedActivities", null)
-    if (!serializedActivities) return {}
-
+/** Attempts to deserialize a list of activities from a JSON-compatible object. */
+const deserializeActivities = serializedActivities => {
     const activities = {}
     for (const serializedActivity of serializedActivities) {
         const activity = Activity.deserialize(serializedActivity)
@@ -67,19 +63,47 @@ const loadSelectedActivities = () => {
     return activities
 }
 
+/** Serializes selectedActivities to a JSON-compatible object. */
+const serializeSelectedActivities = () => {
+    return Array.from(Object.values(selectedActivities)).map(activity => activity.serialize())
+}
+
+/** Attempts to load selectedActivities from the userscript storage. */
+const loadSelectedActivities = () => {
+    if (typeof GM_getValue !== "function") return {}
+    const serializedActivities = GM_getValue("selectedActivities", null)
+    if (!serializedActivities) return {}
+
+    return deserializeActivities(serializedActivities)
+}
+
 /** Attempts to save selectedActivities to the userscript storage. */
 const saveSelectedActivities = () => {
     if (typeof GM_setValue !== "function") return
 
-    const serializedActivities = Array.from(Object.values(selectedActivities)).map(activity => activity.serialize())
-    GM_setValue("selectedActivities", serializedActivities)
+    GM_setValue("selectedActivities", serializeSelectedActivities())
+}
+
+/** Removes all selected activities. */
+const clearSelectedActivities = () => {
+    for (const key of Object.keys(selectedActivities)) delete selectedActivities[key]
+}
+
+/**
+ * Replaces selectedActivities with the given activities.
+ * @param {Object<string, Activity>} activities
+ */
+const setSelectedActivities = activities => {
+    clearSelectedActivities()
+    for (const activity of Object.values(activities)) selectedActivities[activity.identifier] = activity
 }
 
 /**
  * The currently selected activities.
  * @type {Object<string, Activity>}
  */
-const selectedActivities = loadSelectedActivities()
+const selectedActivities = {}
+setSelectedActivities(loadSelectedActivities())
 
 /**
  * The currently hovered activity, may be in selectedActivities.

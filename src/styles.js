@@ -226,9 +226,21 @@ const setTheme = themeName => {
 }
 .opp-release-notes, .opp-settings {
     margin-top: 10px;
-    padding: 10px;
+    padding: 0 10px;
     background: ${theme.settingsBackground};
     border: 1px solid ${theme.settingsBorder};
+}
+.opp-settings > div {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    margin: 10px 0;
+}
+.opp-settings > div > * {
+    margin-bottom: 5px;
+}
+.opp-settings > div button {
+    margin-right: 5px;
 }
 
 /* styles for schedule view */
