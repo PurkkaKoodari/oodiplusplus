@@ -9,6 +9,15 @@ import {locf, loc} from "./locales"
 
 const CHANGELOG = [
     {
+        version: "0.3",
+        changes: [
+            "Schedule can now be exported as iCal (.ics)",
+            "Added dark theme under settings",
+            "Added localization in Finnish",
+            "Schedule can be exported & imported as JSON",
+        ],
+    },
+    {
         version: "0.2",
         changes: [
             "Activities can now be removed in schedule view",
