@@ -3,11 +3,11 @@
 # Oodi++
 
 Oodi++ is a [userscript][userscript] for WebOodi. It adds a powerful schedule view that allows you to pick lectures and other
-events and follow your schedule filling up in real time.
+events and follow your schedule filling up in real time. The completed schedule can be exported in iCalendar format compatible
+with most calendar software.
 
 Potential future features:
 
-- Exporting completes schedules to calendar apps in ICAL format
 - Printing completed schedules
 - Synchronizing course selections: edit selections on all your devices and they'll also automatically update in calendar apps
 

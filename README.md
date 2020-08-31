@@ -3,11 +3,11 @@
 # Oodi++
 
 Oodi++ on [userscript][userscript] WebOodiin. Se lisää tehokkaan lukujärjestysnäkymän, jossa voit valita luentoja
-ja muita opetustapahtumia ja seurata reaaliajassa lukujärjestyksen täyttymistä.
+ja muita opetustapahtumia ja seurata reaaliajassa lukujärjestyksen täyttymistä. Valmiin lukujärjestyksen voit viedä
+iCalendar-muodossa useimpiin kalenterisovelluksiin.
 
 Mahdollisia ominaisuuksia tulevaisuudessa:
 
-- Valmiin lukujärjestyksen vienti kalenterisovelluksiin ICAL-muodossa
 - Valmiin lukujärjestyksen tulostaminen
 - Kurssivalintojen synkronointi: voit muokata valintoja eri laitteilla ja ne päivittyvät automaattisesti myös kalenterisovelluksiin
 
