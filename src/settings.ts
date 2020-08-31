@@ -198,18 +198,18 @@ export function whatsNewSeen() {
     typeof GM_setValue === "function" && GM_setValue("whatsNewVersion", CHANGELOG[0].version)
 }
 
-
-
-// If there are release notes the user hasn't seen, ping the user.
-const unseenNotes = typeof GM_getValue === "function" && GM_getValue("whatsNewVersion") !== CHANGELOG[0].version
-if (unseenNotes) {
-    $releaseNotes.before(
-        $make("p")
-                .addClass("opp-success-text")
-                .text(locf`settings.appUpdated`(VERSION))
-    )
-    setVisibleHeaderPart("release-notes", true)
-    requestSidebarFocus()
-} else {
-    setVisibleHeaderPart(null, true)
+/** If there are release notes the user hasn't seen, ping the user. */
+export function whatsNewCheck() {
+    const unseenNotes = typeof GM_getValue === "function" && GM_getValue("whatsNewVersion") !== CHANGELOG[0].version
+    if (unseenNotes) {
+        $releaseNotes.before(
+            $make("p")
+                    .addClass("opp-success-text")
+                    .text(locf`settings.appUpdated`(VERSION))
+        )
+        setVisibleHeaderPart("release-notes", true)
+        requestSidebarFocus()
+    } else {
+        setVisibleHeaderPart(null, true)
+    }
 }
