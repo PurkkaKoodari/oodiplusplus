@@ -1,7 +1,7 @@
 const webpack = require("webpack")
 const path = require("path")
 
-const scriptVersion = require("./package.json").version
+const scriptVersion = require("./package.json").version.replace(/(\.0)+$/, "")
 
 module.exports = {
     mode: "none",
