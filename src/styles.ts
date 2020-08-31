@@ -1,9 +1,29 @@
-// styles.js: stylesheet for the app
+// styles.ts: stylesheet for the app
 
+type Theme = Readonly<{
+    background: string
+    text: string
+    linkText: string
+    alertText: string
+    successText: string
 
+    settingsBackground: string
+    settingsBorder: string
 
+    buttonBackground: string
+    buttonBorder: string
+    buttonText: string
+    buttonHoverBackground: string
+    buttonActiveBackground: string
 
-const THEMES = {
+    scheduleBoxBorder: string
+    scheduleBoxHoverBackground1: string
+    scheduleBoxHoverBackground2: string
+    scheduleBoxRemoveBackground1: string
+    scheduleBoxRemoveBackground2: string
+}>
+
+export const THEMES: MapObj<Theme> = {
     light: {
         background: "#fff",
         text: "#000",
@@ -50,13 +70,19 @@ const THEMES = {
     },
 }
 
-let themeStyle = null
 
-const setTheme = themeName => {
-    if (typeof GM_setValue === "function") GM_setValue("currentTheme", themeName)
+
+/** The <style> element currently inserted by GM_addStyle. */
+let themeStyle: HTMLStyleElement | null = null
+/** The name of the current theme. */
+let currentTheme: string
+
+export function setTheme(themeName: string) {
+    currentTheme = themeName
+    GM_setValue("currentTheme", themeName)
     const theme = THEMES[themeName]
 
-    $(themeStyle).remove()
+    $(themeStyle as HTMLStyleElement).remove()
     themeStyle = GM_addStyle(`
 /* hack the layout to be responsive so that it can take our sidebar */
 #menu {
@@ -319,11 +345,16 @@ const setTheme = themeName => {
     `)
 }
 
-// load current theme setting
-let currentTheme = typeof GM_getValue === "function" ? GM_getValue("currentTheme") : null
-if (!["light", "dark"].includes(currentTheme)) currentTheme = "light"
+/** Gets the current theme name. */
+export function getTheme() {
+    return currentTheme
+}
 
-setTheme(currentTheme)
+// load current theme setting
+let loadedTheme = typeof GM_getValue === "function" ? GM_getValue("currentTheme") : null
+// default to light theme to match Oodi UI
+if (!(loadedTheme in THEMES)) loadedTheme = "light"
+setTheme(loadedTheme)
 
 // flatten the blue top bar into the flex to make it flow nicer
 $(".menu-content-wrapper").append($(".menu-topbar-actions-wrapper").children())

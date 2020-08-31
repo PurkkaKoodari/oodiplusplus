@@ -1,23 +1,30 @@
-// classes.js: data classes
+// classes.ts: data classes
 
-
+import {isActivitySelected} from "./schedule"
+import {thisMonday} from "./utils"
 
 /** Compared to Activity.dataVersion to see which activities need an update. */
 const CURRENT_DATA_VERSION = 1
 
+export type SerializedCourse = {
+    code: string
+    name: string
+}
+
 /** Represents a course that contains activities. */
-class Course {
-    /**
-     * @param {string} code 
-     * @param {string} name 
-     */
-    constructor(code, name) {
+export class Course {
+    /** The code of the course, such as CS-A1100. */
+    code: string
+    /** The name of the course, such as Programming 1. */
+    name: string
+
+    constructor(code: string, name: string) {
         this.code = code
         this.name = name
     }
 
     /** Serializes this course to a JSON-compatible object. */
-    serialize() {
+    serialize(): SerializedCourse {
         return {
             code: this.code,
             name: this.name,
@@ -25,7 +32,7 @@ class Course {
     }
 
     /** Deserializes a course from the form outputted by serialize(). */
-    static deserialize({code, name}) {
+    static deserialize({code, name}: SerializedCourse) {
         if (typeof code !== "string" || !code) throw new Error("missing course code")
         if (typeof name !== "string" || !name) throw new Error("missing course name")
 
@@ -33,32 +40,44 @@ class Course {
     }
 }
 
+export type SerializedActivity = {
+    course: SerializedCourse
+    type: string
+    name: string
+    opetTapId: string
+    lastUpdate: string
+    dataVersion: number
+    instances: SerializedInstance[]
+}
+
 /** Represents an activity like a lecture or exercise. These are the units one can choose in Oodi. */
-class Activity {
-    /**
-     * @param {Course} course 
-     * @param {string} type 
-     * @param {string} name 
-     * @param {string} opetTapId
-     * @param {Date} lastUpdate
-     * @param {number} dataVersion
-     */
-    constructor(course, type, name, opetTapId, lastUpdate, dataVersion = CURRENT_DATA_VERSION) {
+export class Activity {
+    /** The course containing this Activity. */
+    course: Course
+    /** The type of the activity, such as Lecture. */
+    type: string
+    /** The name of the activity, such as L01. */
+    name: string
+    /** The id of the course, found in the opettaptied.jsp URL as OpetTap. */
+    opetTapId: string
+    /** The latest moment the activity was updated. */
+    lastUpdate: Date
+    /** The latest version of data imported into the activity. */
+    dataVersion: number
+    /** The instances of this activity. */
+    instances: Instance[] = []
+    /** An instance of Activity used as a "dumb container" containing updated data from the current page. */
+    updatedActivity: Activity | null = null
+    /** A function to call to update the HTML injected into opettaptied.js with this activity's data. */
+    updateOpettaptied: () => void = () => {}
+
+    constructor(course: Course, type: string, name: string, opetTapId: string, lastUpdate: Date, dataVersion: number = CURRENT_DATA_VERSION) {
         this.course = course
         this.type = type
         this.name = name
         this.opetTapId = opetTapId
-        this.dataVersion = dataVersion
         this.lastUpdate = lastUpdate
-        /**
-         * @type {Instance[]}
-         */
-        this.instances = []
-        this.updateOpettaptied = () => {}
-        /**
-         * @type {Activity|null}
-         */
-        this.updatedActivity = null
+        this.dataVersion = dataVersion
     }
 
     /** An identifier for the activity that is considered unique. */
@@ -68,12 +87,17 @@ class Activity {
 
     /** Checks whether or not this activity is currently selected. */
     get selected() {
-        return this.identifier in selectedActivities
+        return isActivitySelected(this)
     }
 
     /** Checks whether or not all instances of this activity are in the past. */
     get inPast() {
         return this.instances.every(instance => instance.start.getTime() < thisMonday.getTime())
+    }
+
+    /** Checks whether or not this activity needs a data update. */
+    get needsUpdate() {
+        return this.dataVersion < CURRENT_DATA_VERSION
     }
 
     /** Updates this activity from the parsed activity. */
@@ -89,7 +113,7 @@ class Activity {
     }
 
     /** Serializes this activity to a JSON-compatible object. */
-    serialize() {
+    serialize(): SerializedActivity {
         return {
             course: this.course.serialize(),
             type: this.type,
@@ -102,7 +126,7 @@ class Activity {
     }
 
     /** Deserializes an activity from the form outputted by serialize(). */
-    static deserialize({course, type, name, opetTapId, lastUpdate, dataVersion, instances}) {
+    static deserialize({course, type, name, opetTapId, lastUpdate, dataVersion, instances}: SerializedActivity) {
         const courseObj = Course.deserialize(course)
 
         if (typeof type !== "string") throw new Error("invalid activity type")
@@ -119,15 +143,24 @@ class Activity {
     }
 }
 
+export type SerializedInstance = {
+    start: string
+    end: string
+    location: string
+}
+
 /** Represents a single instance of an activity, like a single lecture. */
-class Instance {
-    /**
-     * @param {Activity} activity 
-     * @param {Date} start 
-     * @param {Date} end 
-     * @param {string} location 
-     */
-    constructor(activity, start, end, location) {
+export class Instance {
+    /** The activity containing this instance. */
+    activity: Activity
+    /** The starting time of this instance. */
+    start: Date
+    /** The ending time of this instance. */
+    end: Date
+    /** The location of this instance. */
+    location: string
+
+    constructor(activity: Activity, start: Date, end: Date, location: string) {
         this.activity = activity
         this.start = start
         this.end = end
@@ -135,7 +168,7 @@ class Instance {
     }
 
     /** Serializes this instance to a JSON-compatible object. */
-    serialize() {
+    serialize(): SerializedInstance {
         return {
             start: this.start.toISOString(),
             end: this.end.toISOString(),
@@ -144,7 +177,7 @@ class Instance {
     }
 
     /** Deserializes an instance from the form outputted by serialize(). */
-    static deserialize(activity, {start, end, location}) {
+    static deserialize(activity: Activity, {start, end, location}: SerializedInstance) {
         const startDate = new Date(start)
         if (isNaN(startDate.getTime())) throw new Error("invalid instance start")
         const endDate = new Date(end)
@@ -156,14 +189,14 @@ class Instance {
 }
 
 /** Holds preprocessed data of an Instance for the purposes of timetable rendering. */
-class RenderInstance {
-    /**
-     * @param {Instance} instance 
-     * @param {number} weekday 
-     * @param {number} start 
-     * @param {number} end 
-     */
-    constructor(instance, weekday, start, end) {
+export class RenderInstance {
+    instance: Instance
+    weekday: number
+    start: number
+    end: number
+    columns: {start: number, end: number} | null = null
+    
+    constructor(instance: Instance, weekday: number, start: number, end: number) {
         this.instance = instance
         this.weekday = weekday
         this.start = start
@@ -171,7 +204,7 @@ class RenderInstance {
         this.columns = null
     }
 
-    overlaps(other) {
+    overlaps(other: RenderInstance): boolean {
         return this !== other && this.weekday === other.weekday && this.start < other.end && other.start < this.end
     }
 }

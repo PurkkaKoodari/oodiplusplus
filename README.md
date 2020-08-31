@@ -25,10 +25,10 @@ Tämän jälkeen lataa itse userscript. Se on saatavilla kolmena versiona:
 
 ## Buildaus
 
-Alkuperäinen lähdekoodi on saatavilla [GitLabissa][gitlab]. Se käyttää tarkoituksella erittäin yksinkertaista build-järjestelmää,
-jotta lopputulos on lukukelpoinen sellaisenaan.
+Alkuperäinen lähdekoodi on saatavilla [GitLabissa][gitlab]. Se käyttää buildaukseen Webpackia ja TypeScriptiä, mutta konfiguraation
+tavoitteena on maksimoida lopputuloksen luettavuus.
 
-Buildataksesi userscriptit suorita komento `make` (vaatii normaalin *nix-ympäristön).
+Buildataksesi userscriptit suorita komennot `npm install` ja `make` (vaatii normaalin *nix-ympäristön sekä suhteellisen tuoreen Node.js:n).
 
 [userscript]: https://en.wikipedia.org/wiki/Userscript
 [tm-ff]: https://addons.mozilla.org/fi/firefox/addon/tampermonkey/

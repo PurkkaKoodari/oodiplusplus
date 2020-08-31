@@ -1,19 +1,124 @@
-// schedule.js: schedule rendering
+// schedule.ts: schedule storage and rendering
+
+import {Activity, SerializedActivity, Instance, RenderInstance} from "./classes"
+import {thisMonday, ONE_WEEK, ONE_HOUR, finnishWeekday, timeOfDay} from "./utils"
+import {requestSidebarFocus} from "./sidebar"
+import {WEEKDAY_NAMES, language} from "./locales"
+import {updateOpettaptiedActivities} from "./opettaptied"
+import {exportSelectedActivitiesAsIcal} from "./ical"
+import {$make} from "./utils"
+
+/** Attempts to deserialize a list of activities from a JSON-compatible object. */
+export function deserializeActivities(serializedActivities: SerializedActivity[]) {
+    const activities = new Map<string, Activity>()
+    for (const serializedActivity of serializedActivities) {
+        const activity = Activity.deserialize(serializedActivity)
+        activities.set(activity.identifier, activity)
+    }
+    return activities
+}
+
+/** Serializes selectedActivities to a JSON-compatible object. */
+export function serializeSelectedActivities(): SerializedActivity[] {
+    return Array.from(selectedActivities.values()).map(activity => activity.serialize())
+}
+
+/** Attempts to load selectedActivities from the userscript storage. */
+function loadSelectedActivities(): Map<string, Activity> {
+    if (typeof GM_getValue !== "function") return new Map()
+    const serializedActivities = GM_getValue("selectedActivities", null)
+    if (!serializedActivities) return new Map()
+
+    return deserializeActivities(serializedActivities)
+}
+
+/** Attempts to save selectedActivities to the userscript storage. */
+export function saveSelectedActivities() {
+    if (typeof GM_setValue !== "function") return
+
+    GM_setValue("selectedActivities", serializeSelectedActivities())
+}
+
+/** Replaces selected activities with the given activities. */
+export function setSelectedActivities(activities: Map<string, Activity>): void {
+    selectedActivities.clear()
+    for (const activity of activities.values()) selectedActivities.set(activity.identifier, activity)
+    saveSelectedActivities()
+    updateActivities()
+}
+
+/** Gets an array of selected activities. */
+export function getSelectedActivities(): Iterable<Activity> {
+    return selectedActivities.values()
+}
+
+/** Gets an existing copy of an activity, if one exists, or the given activity otherwise. */
+export function getExistingSelectedActivity(parsed: Activity): Activity {
+    return selectedActivities.get(parsed.identifier) ?? parsed
+}
+
+/** Checks whether an activity is selected. */
+export function isActivitySelected(activity: Activity): boolean {
+    return activity.identifier in selectedActivities
+}
+
+/** Selects an activity. */
+export function selectActivity(activity: Activity): void {
+    selectedActivities.set(activity.identifier, activity)
+    saveSelectedActivities()
+    updateActivities(activity)
+}
+
+/** Deselects an activity. */
+export function deselectActivity(activity: Activity): void {
+    selectedActivities.delete(activity.identifier)
+    saveSelectedActivities()
+    updateActivities(activity)
+}
+
+/** The currently selected activities. */
+const selectedActivities = new Map<string, Activity>()
+setSelectedActivities(loadSelectedActivities())
 
 
 
-const updateScheduleView = () => {
+/** The currently hovered activity, may be in selectedActivities. */
+let hoveredActivity: Activity | null = null
+
+/** Checks whether an activity is hovered. */
+export function isActivityHovered(activity: Activity) {
+    return hoveredActivity === activity
+}
+
+/** Sets the hovered activity and updates all activity UI. */
+export function setHoveredActivity(activity: Activity | null) {
+    const toUpdate = [activity, hoveredActivity].filter(activity => activity !== null) as Activity[]
+    hoveredActivity = activity
+    updateActivities(...toUpdate)
+}
+
+
+
+/** Updates all activity UI. */
+export function updateActivities(...activities: Activity[]) {
+    updateScheduleView()
+    updateOpettaptiedActivities(activities)
+}
+
+
+
+/** Don't run events while schedule is updating to avoid events being triggered due to elements appearing/disappearing. */
+let scheduleUpdating = false
+
+function updateScheduleView() {
     scheduleUpdating = true
     // nuke the current tables
     $scheduleView.empty()
 
     // compile a list of all instances
-    const allInstances = []
-    const activitiesToRender = Object.values(selectedActivities)
-    if (hoveredActivity && !(hoveredActivity.identifier in selectedActivities)) activitiesToRender.push(hoveredActivity)
-    for (const activity of activitiesToRender) {
-        allInstances.push(...activity.instances)
-    }
+    const activitiesToRender = Array.from(selectedActivities.values())
+    if (hoveredActivity && !hoveredActivity.selected) activitiesToRender.push(hoveredActivity)
+    const allInstances = activitiesToRender.map(activity => activity.instances).flat()
     const anySelected = allInstances.length !== 0
     // sort instances to a predictable order
     allInstances.sort((lhs, rhs) => {
@@ -27,13 +132,17 @@ const updateScheduleView = () => {
 
     if (allInstances.length === 0) {
         $scheduleView.append(
-            $.make("h3").text(anySelected ? "All currently selected activities are in the past. Select more activities from Oodi to display a schedule." : "Select activities from Oodi to display a schedule.")
+            $make("h3").text(anySelected ? "All currently selected activities are in the past. Select more activities from Oodi to display a schedule." : "Select activities from Oodi to display a schedule.")
         )
         return
     }
 
     // weeks are clumped together if schedules are identical
-    const weekContentIndex = {}
+    type RenderWeek = {
+        instances: Instance[]
+        weeks: Date[]
+    }
+    const weekContentIndex = new Map<string, RenderWeek>()
     const currentWeek = new Date(thisMonday)
     while (allInstances.length > 0) {
         // find instances during this week and compile a "week contents" string from it
@@ -42,21 +151,21 @@ const updateScheduleView = () => {
         const weekInstances = []
         let weekContents = ""
         while (allInstances.length > 0 && allInstances[0].start.getTime() < weekEnd.getTime()) {
-            const instance = allInstances.shift()
+            const instance = allInstances.shift()!
             weekInstances.push(instance)
             weekContents += `${instance.activity.identifier} ${instance.start.getDay()} ${timeOfDay(instance.start)} ${timeOfDay(instance.end)}\n`
         }
         if (weekInstances.length !== 0) {
             // add week contents to index
-            if (!(weekContents in weekContentIndex)) weekContentIndex[weekContents] = {instances: weekInstances, weeks: []}
-            weekContentIndex[weekContents].weeks.push(new Date(weekStart))
+            if (!weekContentIndex.has(weekContents)) weekContentIndex.set(weekContents, {instances: weekInstances, weeks: []})
+            weekContentIndex.get(weekContents)!.weeks.push(new Date(weekStart))
         }
         // advance to next week
         currentWeek.setTime(currentWeek.getTime() + ONE_WEEK)
     }
 
     // sort schedules by first week
-    const schedules = Array.from(Object.values(weekContentIndex))
+    const schedules: RenderWeek[] = Array.from(weekContentIndex.values())
     schedules.sort((lhs, rhs) => lhs.weeks[0].getTime() - rhs.weeks[0].getTime())
 
     for (const schedule of schedules) {
@@ -85,7 +194,7 @@ const updateScheduleView = () => {
             // this is O(n^2) but I'm lazy and it's fast enough
             const overlappingColumns = []
             for (const other of renderInstances) {
-                if (renderInstance.overlaps(other)) overlappingColumns.push(other.columns.start)
+                if (renderInstance.overlaps(other)) overlappingColumns.push(other.columns!.start)
             }
             // find a free column
             let column = 0
@@ -101,23 +210,23 @@ const updateScheduleView = () => {
             const overlappingColumns = []
             for (const other of renderInstances) {
                 if (renderInstance.overlaps(other)) {
-                    for (let column = other.columns.start; column <= other.columns.end; column++) overlappingColumns.push(column)
+                    for (let column = other.columns!.start; column <= other.columns!.end; column++) overlappingColumns.push(column)
                 }
             }
             // expand left & right
-            while (renderInstance.columns.start > 0 && !overlappingColumns.includes(renderInstance.columns.start - 1)) renderInstance.columns.start--
-            while (renderInstance.columns.end < columns[renderInstance.weekday] - 1 && !overlappingColumns.includes(renderInstance.columns.end + 1)) renderInstance.columns.end++
+            while (renderInstance.columns!.start > 0 && !overlappingColumns.includes(renderInstance.columns!.start - 1)) renderInstance.columns!.start--
+            while (renderInstance.columns!.end < columns[renderInstance.weekday] - 1 && !overlappingColumns.includes(renderInstance.columns!.end + 1)) renderInstance.columns!.end++
         }
         // see if there is anything in the weekends
         const daysToRender = columns[5] > 0 || columns[6] > 0 ? 7 : 5
 
-        const $schedule = $.make("div")
+        const $schedule = $make("div")
                 .addClass("opp-schedule")
                 .css({height: `${20 + (lastHour - firstHour) * 60}px`})
         // render header
         for (let day = 0; day < daysToRender; day++) {
             $schedule.append(
-                $.make("div")
+                $make("div")
                         .addClass("opp-day")
                         .css({
                             left: `${20 + 100 * day}px`,
@@ -131,7 +240,7 @@ const updateScheduleView = () => {
         // render hour markers
         for (let hour = firstHour; hour < lastHour; hour++) {
             $schedule.append(
-                $.make("div")
+                $make("div")
                         .addClass("opp-hour")
                         .css({
                             left: "0",
@@ -144,13 +253,13 @@ const updateScheduleView = () => {
         }
         // render instances
         for (const renderInstance of renderInstances) {
-            const $instance = $.make("div")
+            const $instance = $make("div")
                     .addClass("opp-activity")
                     .toggleClass("opp-hovered", hoveredActivity === renderInstance.instance.activity)
                     .css({
-                        left: `${20 + 100 * renderInstance.weekday + 100 / columns[renderInstance.weekday] * renderInstance.columns.start}px`,
+                        left: `${20 + 100 * renderInstance.weekday + 100 / columns[renderInstance.weekday] * renderInstance.columns!.start}px`,
                         top: `${20 + 60 * (renderInstance.start / ONE_HOUR - firstHour)}px`,
-                        width: `${100 / columns[renderInstance.weekday] * (renderInstance.columns.end - renderInstance.columns.start + 1)}px`,
+                        width: `${100 / columns[renderInstance.weekday] * (renderInstance.columns!.end - renderInstance.columns!.start + 1)}px`,
                         height: `${60 * (renderInstance.end - renderInstance.start) / ONE_HOUR}px`,
                     })
                     .attr("title", `${renderInstance.instance.activity.course.code} ${renderInstance.instance.activity.course.name}\n` +
@@ -158,17 +267,17 @@ const updateScheduleView = () => {
                             `${WEEKDAY_NAMES[language][renderInstance.weekday]} ${renderInstance.instance.start.toLocaleTimeString(language)}\u2013${renderInstance.instance.end.toLocaleTimeString(language)}\n` +
                             `${renderInstance.instance.location}`)
                     .append(
-                        $.make("a")
+                        $make("a")
                                 .attr("href", `https://${location.host}/a/opettaptied.jsp?OpetTap=${renderInstance.instance.activity.opetTapId}`)
                                 .text(renderInstance.instance.activity.course.code)
                                 // stop click events from the link from propagating to the schedule event
                                 .click(e => e.stopPropagation())
                     )
                     .append(
-                        $.make("span").text(renderInstance.instance.activity.name)
+                        $make("span").text(renderInstance.instance.activity.name)
                     )
                     .append(
-                        $.make("span").text(renderInstance.instance.location)
+                        $make("span").text(renderInstance.instance.location)
                     )
                     .click(() => scheduleClickAction(renderInstance.instance.activity))
                     // be a bit paranoid to avoid unnecessary events
@@ -177,9 +286,9 @@ const updateScheduleView = () => {
             $schedule.append($instance)
         
             // add outdatedness indicator if applicable
-            if (renderInstance.instance.activity.dataVersion < CURRENT_DATA_VERSION) {
+            if (renderInstance.instance.activity.needsUpdate) {
                 $instance.append(
-                    $.make("div")
+                    $make("div")
                             .addClass("opp-outdated-indicator opp-alert-text")
                             .text("\u26A0")
                             .attr("title", "This activity's data is in an outdated format. Visit its course page to update it.")
@@ -189,45 +298,38 @@ const updateScheduleView = () => {
 
         $scheduleView
                 .append(
-                    $.make("h3").text(dateHeader)
+                    $make("h3").text(dateHeader)
                 )
                 .append($schedule)
     }
     scheduleUpdating = false
     
     // remove old data format notices
-    $(".opp-outdated-format-alert").remove()
+    $activitiesNeedDataUpdate.hide().empty()
     // add notice and blink opener if activities use outdated data formats
-    const needDataFormatUpdate = Array.from(Object.values(selectedActivities)).filter(activity => activity.dataVersion < CURRENT_DATA_VERSION).length
+    const needDataFormatUpdate = Array.from(selectedActivities.values()).filter(activity => activity.needsUpdate).length
     if (needDataFormatUpdate > 0) {
-        const $updateNotification = $.make("p")
+        $activitiesNeedDataUpdate
                 .addClass("opp-alert-text opp-outdated-format-alert")
                 .append(`${needDataFormatUpdate} activities are using an outdated data format. Visit their course pages to update them.`)
-        $scheduleActions.before($updateNotification)
+                .show()
         requestSidebarFocus()
     }
 }
 
-/**
- * @param {Activity} activity 
- */
-const removeActivityFromSchedule = activity => {
-    // unselect the activity
-    delete selectedActivities[activity.identifier]
-    saveSelectedActivities()
+function removeActivityFromSchedule(activity: Activity) {
     // stop hovering the activity
-    if (hoveredActivity === activity) setHoveredActivity(null)
-    // update UI
-    updateScheduleView()
-    activity.updateOpettaptied()
+    if (hoveredActivity === activity) hoveredActivity = null
+    // deselect and update UI
+    deselectActivity(activity)
     // only delete one per click
     setScheduleAction(null)()
 }
 
-let scheduleClickAction = () => {}
+let scheduleClickAction = (activity: Activity) => {}
 let scheduleClickActionClass = "none"
 
-const setScheduleAction = (action, actionClass = "none") => function () {
+export const setScheduleAction = (action: ((activity: Activity) => void) | null, actionClass: string = "none") => function (this: HTMLElement | void) {
     // cancel on second click
     if (scheduleClickAction === action) {
         setScheduleAction(null)()
@@ -241,34 +343,30 @@ const setScheduleAction = (action, actionClass = "none") => function () {
     $(".opp-schedule-actions button").removeClass("opp-active")
     if (action !== null) {
         scheduleClickAction = action
-        $(this).addClass("opp-active")
+        $(this as HTMLElement).addClass("opp-active")
     } else {
         scheduleClickAction = () => {}
     }
 }
 
-const $scheduleActions = $.make("div")
+export const $scheduleActions = $make("div")
         .addClass("opp-schedule-actions")
         .append(
-            $.make("div").text("Schedule tools:")
+            $make("div").text("Schedule tools:")
         )
         .append(
-            $.make("button")
+            $make("button")
                     .attr("type", "button")
                     .text("Remove")
                     .click(setScheduleAction(removeActivityFromSchedule, "remove"))
         )
         .append(
-            $.make("button")
+            $make("button")
                     .attr("type", "button")
                     .text("Export iCal")
                     .click(() => exportSelectedActivitiesAsIcal())
         )
 
-const $scheduleView = $.make("div").addClass("opp-schedule-view")
-$sidebarContent.append($scheduleActions).append($scheduleView)
+export const $scheduleView = $make("div").addClass("opp-schedule-view")
 
-/** Don't run events while schedule is updating to avoid events being triggered due to elements appearing/disappearing. */
-let scheduleUpdating = false
-
-updateScheduleView()
+export const $activitiesNeedDataUpdate = $make("p").hide()

@@ -24,10 +24,10 @@ Then download the userscript itself. It's available in three editions:
 
 ## Building
 
-The original source code is available on [GitLab][gitlab]. It intentionally uses an extremely simple build system to preserve
-a human readable output.
+The original source code is available on [GitLab][gitlab]. The build process uses Webpack and TypeScript, but the configuration
+intends to maximize the readability of the result.
 
-To build the userscripts just run `make` (requires a normal *nix environment).
+To build the userscripts just run `npm install` and `make` (requires a normal *nix environment and a relatively fresh Node.js).
 
 [userscript]: https://en.wikipedia.org/wiki/Userscript
 [tm-ff]: https://addons.mozilla.org/fi/firefox/addon/tampermonkey/

@@ -1,7 +1,11 @@
-MAINFILES=src/classes.js src/locales.js src/init.js src/styles.js src/ical.js src/sidebar.js src/schedule.js src/opettaptied.js src/settings.js src/footer.js
-VERSION=0.2.2
+SOURCES=$(wildcard src/*.ts)
+OUTPUTS=oodiplusplus.autoupdate.user.js oodiplusplus.autocheck.user.js oodiplusplus.folio.user.js
+WEBPACK=node_modules/.bin/webpack
 
-userscripts: oodiplusplus.autoupdate.user.js oodiplusplus.autocheck.user.js oodiplusplus.folio.user.js
+userscripts: $(OUTPUTS)
+
+$(OUTPUTS) &: $(SOURCES) tsconfig.json webpack.config.js
+	$(WEBPACK)
 
 website: userscripts index.html index.en.html
 
@@ -15,10 +19,6 @@ index.en.html: README.en.md.html
 
 %.md.html: %.md
 	markdown $< > $@
-
-oodiplusplus.%.user.js: $(MAINFILES) src/header.%.js
-	cat src/header.$*.js $(MAINFILES) > $@
-	sed -i -e s/__VERSION__/$(VERSION)/ $@
 
 clean:
 	rm -f *.user.js index.html index.en.html *.md.html

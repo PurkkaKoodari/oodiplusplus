@@ -1,7 +1,11 @@
-// settings.js: settings and release notes
+// settings.ts: settings and release notes
 
-
-
+import {deserializeActivities, serializeSelectedActivities, setSelectedActivities} from "./schedule"
+import {Activity} from "./classes"
+import {requestSidebarFocus} from "./sidebar"
+import {$updateCheckInfo, $newVersionInfo} from "./updatecheck"
+import {THEMES, getTheme, setTheme} from "./styles"
+import {$make, downloadFile} from "./utils"
 
 const CHANGELOG = [
     {
@@ -21,77 +25,79 @@ const CHANGELOG = [
     },
 ]
 
-const $releaseNotes = $.make("div")
+const $releaseNotes = $make("div")
         .addClass("opp-release-notes")
         .append(
             CHANGELOG.map(({version, changes}) => [
-                $.make("h4").text(`version ${version}`),
-                $.make("ul").append(
-                    changes.map(change => $.make("li").text(change))
+                $make("h4").text(`version ${version}`),
+                $make("ul").append(
+                    changes.map(change => $make("li").text(change))
                 ),
             ]).flat()
         )
 
-const tryImportSelectedActivities = (jsonText, sourceKind) => {
+function tryImportSelectedActivities(jsonText: string, sourceKind: string) {
+    let imported: Map<string, Activity>
     try {
-        setSelectedActivities(deserializeActivities(JSON.parse(jsonText)))
+        imported = deserializeActivities(JSON.parse(jsonText))
     } catch (error) {
         console.error("Import failed:", error)
         alert(`Failed to import activities. Most likely ${sourceKind} is broken.`)
         return
     }
-    alert(`Successfully imported ${Object.keys(selectedActivities).length} activities.`)
-    saveSelectedActivities()
-    updateActivities()
+    setSelectedActivities(imported)
+    alert(`Successfully imported ${Object.keys(imported).length} activities.`)
 }
 
-const $importFileChooser = $.make("input")
+const $importFileChooser = $make<HTMLInputElement>("input")
         .attr("type", "file")
         .attr("accept", ".json,application/json")
         .addClass("opp-import-file-chooser")
         .on("change", () => {
-            if (!$importFileChooser[0].files.length) return
-            $importFileChooser[0].files[0].text().then(text => tryImportSelectedActivities(text, "the file you chose"))
+            if (!$importFileChooser[0].files!.length) return
+            $importFileChooser[0].files![0].text().then(text => tryImportSelectedActivities(text, "the file you chose"))
         })
         .hide()
         .appendTo("body")
 
-const $settings = $.make("div")
+const $settings = $make("div")
         .addClass("opp-settings")
         .append(
-            $.make("h4").text("Settings")
+            $make("h4").text("Settings")
         )
         .append(
-            $.make("div").text("The language of Oodi++ is automatically synchronized with Oodi's language.")
+            $make("div").text("The language of Oodi++ is automatically synchronized with Oodi's language.")
         )
         .append(
-            $.make("div")
+            $make("div")
                     .append("Theme: ")
                     .append(
                         Object.keys(THEMES).map(theme => [
-                            $.make("input")
+                            $make("input")
                                     .addClass("opp-theme-button")
                                     .attr("id", `opp-theme-button-${theme}`)
                                     .attr("type", "radio")
                                     .attr("name", "opp-theme-selection")
-                                    .prop("checked", currentTheme === theme)
-                                    .on("input", () => setTheme(theme)),
-                            $.make("label")
+                                    .prop("checked", getTheme() === theme)
+                                    .on("input", function () {
+                                        if ($(this).prop("checked")) setTheme(theme)
+                                    }),
+                            $make("label")
                                     .attr("for", `opp-theme-button-${theme}`)
                                     .text(`${theme}`),
                         ]).flat()
                     )
         )
         .append(
-            $.make("div")
+            $make("div")
                     .append(
-                        $.make("button")
+                        $make("button")
                                 .attr("type", "button")
                                 .text("Export data as text")
                                 .click(() => prompt("Copy your schedule here: ", JSON.stringify(serializeSelectedActivities())))
                     )
                     .append(
-                        $.make("button")
+                        $make("button")
                                 .text("Import data as text")
                                 .click(() => {
                                     if (!confirm("Are you sure you want to PERMANENTLY DELETE all activities added to Oodi++ and replace them with imported ones?")) return
@@ -101,13 +107,13 @@ const $settings = $.make("div")
                                 })
                     )
                     .append(
-                        $.make("button")
+                        $make("button")
                                 .attr("type", "button")
                                 .text("Export data to file")
                                 .click(() => downloadFile(JSON.stringify(serializeSelectedActivities()), "oodiplusplus.json", "application/json"))
                     )
                     .append(
-                        $.make("button")
+                        $make("button")
                                 .text("Import data from file")
                                 .click(() => {
                                     if (!confirm("Are you sure you want to PERMANENTLY DELETE all activities added to Oodi++ and replace them with imported ones?")) return
@@ -115,48 +121,49 @@ const $settings = $.make("div")
                                 })
                     )
                     .append(
-                        $.make("button")
+                        $make("button")
                                 .attr("type", "button")
                                 .text("Reset data")
                                 .click(() => {
                                     if (!confirm("Are you sure you want to PERMANENTLY DELETE all activities added to Oodi++?")) return
-                                    clearSelectedActivities()
-                                    saveSelectedActivities()
-                                    updateActivities()
+                                    setSelectedActivities(new Map())
                                 })
                     )
         )
 
-const $showReleaseNotes = $.make("button")
+const $showReleaseNotes = $make("button")
         .attr("type", "button")
         .text("Release notes")
         .click(() => setVisibleHeaderPart("release-notes"))
 
-const $showSettings = $.make("button")
+const $showSettings = $make("button")
         .attr("type", "button")
         .text("Settings")
         .click(() => setVisibleHeaderPart("settings"))
 
-const $sidebarHeader = $.make("div")
+/** Contains the app title, release notes and settings. */
+export const $sidebarHeader = $make("div")
         .addClass("opp-sidebar-header")
         .append(
-            $.make("div")
+            $make("div")
                     .addClass("opp-header")
                     .append(
-                        $.make("h2").text(`Oodi++ ${VERSION}`)
+                        $make("h2").text(`Oodi++ ${VERSION}`)
                     )
                     .append($showReleaseNotes)
                     .append($showSettings)
         )
+        .append($updateCheckInfo)
+        .append($newVersionInfo)
         .append($releaseNotes)
         .append($settings)
 
-$sidebarContent.prepend($sidebarHeader)
 
-let visibleHeaderPart = null
+
+let visibleHeaderPart: "release-notes" | "settings" | null = null
 
 /** Opens or closes settings or release notes. */
-const setVisibleHeaderPart = (part, instant = false) => {
+function setVisibleHeaderPart(part: "release-notes" | "settings" | null, instant: boolean = false) {
     // second click toggles
     if (part !== null && visibleHeaderPart === part) {
         setVisibleHeaderPart(null)
@@ -177,11 +184,20 @@ const setVisibleHeaderPart = (part, instant = false) => {
     $showSettings.toggleClass("opp-active", part === "settings")
 }
 
+
+
+/** Called when the sidebar opens to mark the notes as seen. */
+export function whatsNewSeen() {
+    typeof GM_setValue === "function" && GM_setValue("whatsNewVersion", CHANGELOG[0].version)
+}
+
+
+
 // If there are release notes the user hasn't seen, ping the user.
 const unseenNotes = typeof GM_getValue === "function" && GM_getValue("whatsNewVersion") !== CHANGELOG[0].version
 if (unseenNotes) {
     $releaseNotes.before(
-        $.make("p")
+        $make("p")
                 .addClass("opp-success-text")
                 .text(`Oodi++ was updated to version ${VERSION}. Here's what's new.`)
     )
@@ -189,23 +205,4 @@ if (unseenNotes) {
     requestSidebarFocus()
 } else {
     setVisibleHeaderPart(null, true)
-}
-
-/** Called when the sidebar opens to mark the notes as seen. */
-const whatsNewSeen = () => {
-    typeof GM_setValue === "function" && GM_setValue("whatsNewVersion", CHANGELOG[0].version)
-}
-
-/** Opens a file download dialog. */
-const downloadFile = (contents, fileName, mimeType) => {
-    const blob = new Blob([contents], {type: mimeType})
-    const objectUrl = URL.createObjectURL(blob)
-    const $link = $.make("a")
-            .attr("href", objectUrl)
-            .attr("download", fileName)
-            .hide()
-            .appendTo("body")
-    $link[0].click()
-    $link.remove()
-    URL.revokeObjectURL(objectUrl)
 }
