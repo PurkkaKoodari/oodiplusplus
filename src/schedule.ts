@@ -3,109 +3,10 @@
 import {Activity, SerializedActivity, Instance, RenderInstance} from "./classes"
 import {thisMonday, ONE_WEEK, ONE_HOUR, finnishWeekday, timeOfDay} from "./utils"
 import {requestSidebarFocus} from "./sidebar"
-import {WEEKDAY_NAMES, language} from "./locales"
+import {loc, locale, locf, language} from "./locales"
 import {updateOpettaptiedActivities} from "./opettaptied"
 import {exportSelectedActivitiesAsIcal} from "./ical"
 import {$make} from "./utils"
-
-/** Attempts to deserialize a list of activities from a JSON-compatible object. */
-export function deserializeActivities(serializedActivities: SerializedActivity[]) {
-    const activities = new Map<string, Activity>()
-    for (const serializedActivity of serializedActivities) {
-        const activity = Activity.deserialize(serializedActivity)
-        activities.set(activity.identifier, activity)
-    }
-    return activities
-}
-
-/** Serializes selectedActivities to a JSON-compatible object. */
-export function serializeSelectedActivities(): SerializedActivity[] {
-    return Array.from(selectedActivities.values()).map(activity => activity.serialize())
-}
-
-/** Attempts to load selectedActivities from the userscript storage. */
-function loadSelectedActivities(): Map<string, Activity> {
-    if (typeof GM_getValue !== "function") return new Map()
-    const serializedActivities = GM_getValue("selectedActivities", null)
-    if (!serializedActivities) return new Map()
-
-    return deserializeActivities(serializedActivities)
-}
-
-/** Attempts to save selectedActivities to the userscript storage. */
-export function saveSelectedActivities() {
-    if (typeof GM_setValue !== "function") return
-
-    GM_setValue("selectedActivities", serializeSelectedActivities())
-}
-
-/** Replaces selected activities with the given activities. */
-export function setSelectedActivities(activities: Map<string, Activity>): void {
-    selectedActivities.clear()
-    for (const activity of activities.values()) selectedActivities.set(activity.identifier, activity)
-    saveSelectedActivities()
-    updateActivities()
-}
-
-/** Gets an array of selected activities. */
-export function getSelectedActivities(): Iterable<Activity> {
-    return selectedActivities.values()
-}
-
-/** Gets an existing copy of an activity, if one exists, or the given activity otherwise. */
-export function getExistingSelectedActivity(parsed: Activity): Activity {
-    return selectedActivities.get(parsed.identifier) ?? parsed
-}
-
-/** Checks whether an activity is selected. */
-export function isActivitySelected(activity: Activity): boolean {
-    return activity.identifier in selectedActivities
-}
-
-/** Selects an activity. */
-export function selectActivity(activity: Activity): void {
-    selectedActivities.set(activity.identifier, activity)
-    saveSelectedActivities()
-    updateActivities(activity)
-}
-
-/** Deselects an activity. */
-export function deselectActivity(activity: Activity): void {
-    selectedActivities.delete(activity.identifier)
-    saveSelectedActivities()
-    updateActivities(activity)
-}
-
-/** The currently selected activities. */
-const selectedActivities = new Map<string, Activity>()
-setSelectedActivities(loadSelectedActivities())
-
-
-
-/** The currently hovered activity, may be in selectedActivities. */
-let hoveredActivity: Activity | null = null
-
-/** Checks whether an activity is hovered. */
-export function isActivityHovered(activity: Activity) {
-    return hoveredActivity === activity
-}
-
-/** Sets the hovered activity and updates all activity UI. */
-export function setHoveredActivity(activity: Activity | null) {
-    const toUpdate = [activity, hoveredActivity].filter(activity => activity !== null) as Activity[]
-    hoveredActivity = activity
-    updateActivities(...toUpdate)
-}
-
-
-
-/** Updates all activity UI. */
-export function updateActivities(...activities: Activity[]) {
-    updateScheduleView()
-    updateOpettaptiedActivities(activities)
-}
-
-
 
 /** Don't run events while schedule is updating to avoid events being triggered due to elements appearing/disappearing. */
 let scheduleUpdating = false
@@ -132,7 +33,7 @@ function updateScheduleView() {
 
     if (allInstances.length === 0) {
         $scheduleView.append(
-            $make("h3").text(anySelected ? "All currently selected activities are in the past. Select more activities from Oodi to display a schedule." : "Select activities from Oodi to display a schedule.")
+            $make("h3").text(anySelected ? loc`schedule.empty.allInPast` : loc`schedule.empty.noSelection`)
         )
         return
     }
@@ -234,7 +135,7 @@ function updateScheduleView() {
                             width: `${500 / daysToRender}px`,
                             height: "20px",
                         })
-                        .text(WEEKDAY_NAMES[language][day])
+                        .text(locale.weekdays[day])
             )
         }
         // render hour markers
@@ -264,7 +165,7 @@ function updateScheduleView() {
                     })
                     .attr("title", `${renderInstance.instance.activity.course.code} ${renderInstance.instance.activity.course.name}\n` +
                             `${renderInstance.instance.activity.type} ${renderInstance.instance.activity.name}\n` +
-                            `${WEEKDAY_NAMES[language][renderInstance.weekday]} ${renderInstance.instance.start.toLocaleTimeString(language)}\u2013${renderInstance.instance.end.toLocaleTimeString(language)}\n` +
+                            `${locale.weekdays[renderInstance.weekday]} ${renderInstance.instance.start.toLocaleTimeString(language)}\u2013${renderInstance.instance.end.toLocaleTimeString(language)}\n` +
                             `${renderInstance.instance.location}`)
                     .append(
                         $make("a")
@@ -291,7 +192,7 @@ function updateScheduleView() {
                     $make("div")
                             .addClass("opp-outdated-indicator opp-alert-text")
                             .text("\u26A0")
-                            .attr("title", "This activity's data is in an outdated format. Visit its course page to update it.")
+                            .attr("title", loc`schedule.dataUpdate.required`)
                 )
             }
         }
@@ -311,7 +212,7 @@ function updateScheduleView() {
     if (needDataFormatUpdate > 0) {
         $activitiesNeedDataUpdate
                 .addClass("opp-alert-text opp-outdated-format-alert")
-                .append(`${needDataFormatUpdate} activities are using an outdated data format. Visit their course pages to update them.`)
+                .append(locf`alert.dataUpdate.required`(needDataFormatUpdate))
                 .show()
         requestSidebarFocus()
     }
@@ -352,21 +253,122 @@ export const setScheduleAction = (action: ((activity: Activity) => void) | null,
 export const $scheduleActions = $make("div")
         .addClass("opp-schedule-actions")
         .append(
-            $make("div").text("Schedule tools:")
+            $make("div").text(loc`schedule.actions.title`)
         )
         .append(
             $make("button")
                     .attr("type", "button")
-                    .text("Remove")
+                    .text(loc`schedule.actions.remove`)
                     .click(setScheduleAction(removeActivityFromSchedule, "remove"))
         )
         .append(
             $make("button")
                     .attr("type", "button")
-                    .text("Export iCal")
+                    .text(loc`schedule.actions.exportIcal`)
                     .click(() => exportSelectedActivitiesAsIcal())
         )
 
 export const $scheduleView = $make("div").addClass("opp-schedule-view")
 
 export const $activitiesNeedDataUpdate = $make("p").hide()
+
+
+
+/** Attempts to deserialize a list of activities from a JSON-compatible object. */
+export function deserializeActivities(serializedActivities: SerializedActivity[]) {
+    const activities = new Map<string, Activity>()
+    for (const serializedActivity of serializedActivities) {
+        const activity = Activity.deserialize(serializedActivity)
+        activities.set(activity.identifier, activity)
+    }
+    return activities
+}
+
+/** Serializes selectedActivities to a JSON-compatible object. */
+export function serializeSelectedActivities(): SerializedActivity[] {
+    return Array.from(selectedActivities.values()).map(activity => activity.serialize())
+}
+
+/** Attempts to load selectedActivities from the userscript storage. */
+function loadSelectedActivities(): Map<string, Activity> {
+    if (typeof GM_getValue !== "function") return new Map()
+    const serializedActivities = GM_getValue("selectedActivities", null)
+    if (!serializedActivities) return new Map()
+
+    return deserializeActivities(serializedActivities)
+}
+
+/** Attempts to save selectedActivities to the userscript storage. */
+export function saveSelectedActivities() {
+    if (typeof GM_setValue !== "function") return
+
+    GM_setValue("selectedActivities", serializeSelectedActivities())
+}
+
+/** Replaces selected activities with the given activities. */
+export function setSelectedActivities(activities: Map<string, Activity>): void {
+    selectedActivities.clear()
+    for (const activity of activities.values()) selectedActivities.set(activity.identifier, activity)
+    saveSelectedActivities()
+    updateActivities()
+}
+
+/** Gets an array of selected activities. */
+export function getSelectedActivities(): Iterable<Activity> {
+    return selectedActivities.values()
+}
+
+/** Gets an existing copy of an activity, if one exists, or the given activity otherwise. */
+export function getExistingSelectedActivity(parsed: Activity): Activity {
+    return selectedActivities.get(parsed.identifier) ?? parsed
+}
+
+/** Checks whether an activity is selected. */
+export function isActivitySelected(activity: Activity): boolean {
+    return selectedActivities.has(activity.identifier)
+}
+
+/** Selects an activity. */
+export function selectActivity(activity: Activity): void {
+    selectedActivities.set(activity.identifier, activity)
+    saveSelectedActivities()
+    updateActivities(activity)
+}
+
+/** Deselects an activity. */
+export function deselectActivity(activity: Activity): void {
+    selectedActivities.delete(activity.identifier)
+    saveSelectedActivities()
+    updateActivities(activity)
+}
+
+/** Checks whether an activity is hovered. */
+export function isActivityHovered(activity: Activity) {
+    return hoveredActivity === activity
+}
+
+/** Sets the hovered activity and updates all activity UI. */
+export function setHoveredActivity(activity: Activity | null) {
+    const toUpdate = [activity, hoveredActivity].filter(activity => activity !== null) as Activity[]
+    hoveredActivity = activity
+    updateActivities(...toUpdate)
+}
+
+
+
+/** Updates all activity UI. */
+export function updateActivities(...activities: Activity[]) {
+    updateScheduleView()
+    updateOpettaptiedActivities(activities)
+}
+
+
+
+/** The currently selected activities. */
+const selectedActivities = new Map<string, Activity>()
+
+/** The currently hovered activity, may be in selectedActivities. */
+let hoveredActivity: Activity | null = null
+
+// load selected activities from storage
+setSelectedActivities(loadSelectedActivities())

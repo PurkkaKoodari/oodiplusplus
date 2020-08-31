@@ -3,9 +3,9 @@
 import {deserializeActivities, serializeSelectedActivities, setSelectedActivities} from "./schedule"
 import {Activity} from "./classes"
 import {requestSidebarFocus} from "./sidebar"
-import {$updateCheckInfo, $newVersionInfo} from "./updatecheck"
 import {THEMES, getTheme, setTheme} from "./styles"
 import {$make, downloadFile} from "./utils"
+import {locf, loc} from "./locales"
 
 const CHANGELOG = [
     {
@@ -25,7 +25,7 @@ const CHANGELOG = [
     },
 ]
 
-const $releaseNotes = $make("div")
+export const $releaseNotes = $make("div")
         .addClass("opp-release-notes")
         .append(
             CHANGELOG.map(({version, changes}) => [
@@ -36,17 +36,17 @@ const $releaseNotes = $make("div")
             ]).flat()
         )
 
-function tryImportSelectedActivities(jsonText: string, sourceKind: string) {
+function tryImportSelectedActivities(jsonText: string, failMessage: string) {
     let imported: Map<string, Activity>
     try {
         imported = deserializeActivities(JSON.parse(jsonText))
     } catch (error) {
         console.error("Import failed:", error)
-        alert(`Failed to import activities. Most likely ${sourceKind} is broken.`)
+        alert(failMessage)
         return
     }
     setSelectedActivities(imported)
-    alert(`Successfully imported ${Object.keys(imported).length} activities.`)
+    alert(locf`settings.import.success`(Object.keys(imported).length))
 }
 
 const $importFileChooser = $make<HTMLInputElement>("input")
@@ -55,7 +55,7 @@ const $importFileChooser = $make<HTMLInputElement>("input")
         .addClass("opp-import-file-chooser")
         .on("change", () => {
             if (!$importFileChooser[0].files!.length) return
-            $importFileChooser[0].files![0].text().then(text => tryImportSelectedActivities(text, "the file you chose"))
+            $importFileChooser[0].files![0].text().then(text => tryImportSelectedActivities(text, loc`settings.import.failed.file`))
         })
         .hide()
         .appendTo("body")
@@ -63,14 +63,14 @@ const $importFileChooser = $make<HTMLInputElement>("input")
 const $settings = $make("div")
         .addClass("opp-settings")
         .append(
-            $make("h4").text("Settings")
+            $make("h4").text(loc`settings.title`)
         )
         .append(
-            $make("div").text("The language of Oodi++ is automatically synchronized with Oodi's language.")
+            $make("div").text(loc`settings.language`)
         )
         .append(
             $make("div")
-                    .append("Theme: ")
+                    .append(loc`settings.theme`)
                     .append(
                         Object.keys(THEMES).map(theme => [
                             $make("input")
@@ -84,7 +84,7 @@ const $settings = $make("div")
                                     }),
                             $make("label")
                                     .attr("for", `opp-theme-button-${theme}`)
-                                    .text(`${theme}`),
+                                    .text(loc(`settings.theme.${theme}`)),
                         ]).flat()
                     )
         )
@@ -93,39 +93,39 @@ const $settings = $make("div")
                     .append(
                         $make("button")
                                 .attr("type", "button")
-                                .text("Export data as text")
-                                .click(() => prompt("Copy your schedule here: ", JSON.stringify(serializeSelectedActivities())))
+                                .text(loc`settings.export.text`)
+                                .click(() => prompt(loc`settings.export.text.prompt`, JSON.stringify(serializeSelectedActivities())))
                     )
                     .append(
                         $make("button")
-                                .text("Import data as text")
+                                .text(loc`settings.import.text`)
                                 .click(() => {
-                                    if (!confirm("Are you sure you want to PERMANENTLY DELETE all activities added to Oodi++ and replace them with imported ones?")) return
-                                    const json = prompt("Enter the exported text:")
+                                    if (!confirm(loc`settings.import.confirm`)) return
+                                    const json = prompt(loc`settings.import.text.prompt`)
                                     if (!json) return
-                                    tryImportSelectedActivities(json, "the text you entered")
+                                    tryImportSelectedActivities(json, loc`settings.import.failed.text`)
                                 })
                     )
                     .append(
                         $make("button")
                                 .attr("type", "button")
-                                .text("Export data to file")
+                                .text(loc`settings.export.file`)
                                 .click(() => downloadFile(JSON.stringify(serializeSelectedActivities()), "oodiplusplus.json", "application/json"))
                     )
                     .append(
                         $make("button")
-                                .text("Import data from file")
+                                .text(loc`settings.import.file`)
                                 .click(() => {
-                                    if (!confirm("Are you sure you want to PERMANENTLY DELETE all activities added to Oodi++ and replace them with imported ones?")) return
+                                    if (!confirm(loc`settings.import.confirm`)) return
                                     $importFileChooser[0].click()
                                 })
                     )
                     .append(
                         $make("button")
                                 .attr("type", "button")
-                                .text("Reset data")
+                                .text(loc`settings.reset`)
                                 .click(() => {
-                                    if (!confirm("Are you sure you want to PERMANENTLY DELETE all activities added to Oodi++?")) return
+                                    if (!confirm(loc`settings.reset.confirm`)) return
                                     setSelectedActivities(new Map())
                                 })
                     )
@@ -133,12 +133,12 @@ const $settings = $make("div")
 
 const $showReleaseNotes = $make("button")
         .attr("type", "button")
-        .text("Release notes")
+        .text(loc`settings.releaseNotes`)
         .click(() => setVisibleHeaderPart("release-notes"))
 
 const $showSettings = $make("button")
         .attr("type", "button")
-        .text("Settings")
+        .text(loc`settings.title`)
         .click(() => setVisibleHeaderPart("settings"))
 
 /** Contains the app title, release notes and settings. */
@@ -148,13 +148,11 @@ export const $sidebarHeader = $make("div")
             $make("div")
                     .addClass("opp-header")
                     .append(
-                        $make("h2").text(`Oodi++ ${VERSION}`)
+                        $make("h2").text(locf`appTitle`(VERSION))
                     )
                     .append($showReleaseNotes)
                     .append($showSettings)
         )
-        .append($updateCheckInfo)
-        .append($newVersionInfo)
         .append($releaseNotes)
         .append($settings)
 
@@ -199,7 +197,7 @@ if (unseenNotes) {
     $releaseNotes.before(
         $make("p")
                 .addClass("opp-success-text")
-                .text(`Oodi++ was updated to version ${VERSION}. Here's what's new.`)
+                .text(locf`settings.appUpdated`(VERSION))
     )
     setVisibleHeaderPart("release-notes", true)
     requestSidebarFocus()

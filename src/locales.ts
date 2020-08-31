@@ -14,9 +14,147 @@ export const COURSE_INFO_KEYS: MapObj<string> = {
     "Nimi": "name", "Namn": "name", "Name": "name",
 }
 
+type LocaleFormat = (...args: any[]) => string
+type LocaleMessage = LocaleFormat | string
+
+/** Tag for localization template strings. */
+function fmt(strings: TemplateStringsArray, ...params: number[]): LocaleFormat {
+    if (strings.length === 1) throw new Error("fmt must have parameters")
+
+    return (...args: any[]) => {
+        const parts = [strings[0]]
+        for (let i = 0; i < strings.length - 1; i++) {
+            parts.push(args[params[i]].toString(), strings[i + 1])
+        }
+        return parts.join("")
+    }
+}
+
+type Locale = {
+    weekdays: string[]
+    messages: MapObj<LocaleMessage>
+}
+
 /** Weekday names in the default locales. */
-export const WEEKDAY_NAMES: MapObj<string[]> = {
-    fi: ["ma", "ti", "ke", "to", "pe", "la", "su"],
-    sv: ["må", "ti", "on", "to", "fr", "lö", "sö"],
-    en: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+export const LOCALES: MapObj<Locale> = {
+    fi: {
+        weekdays: ["ma", "ti", "ke", "to", "pe", "la", "su"],
+        messages: {
+            "alert.dataUpdate.available": fmt`${0} aktiviteettia tällä sivulla on muuttunut Oodi++:aan lisäämisen jälkeen. `,
+            "alert.dataUpdate.required": fmt`${0} aktiviteetin data on vanhassa muodossa. Käy niiden kurssisivuilla päivittääksesi ne.`,
+            "alert.dataUpdate.updateAll": "Päivitä kaikki",
+            "appTitle": fmt`Oodi++ ${0}`,
+            "ical.title": "Oodi++ lukujärjestys",
+            "ical.description": fmt`Viety Oodi++ versiosta ${0} ${1}`,
+            "opettaptied.add": "Lisää Oodi++:aan",
+            "opettaptied.dataUpdate": "Päivitä Oodi++:ssa",
+            "opettaptied.dataUpdate.tooltip": "Klikkaa päivittääksesi samanniminen aktiviteetti Oodi++:ssa tältä sivulta löytyvillä tiedoilla",
+            "opettaptied.inpast": "Tämä aktiviteetti on menneisyydessä.",
+            "opettaptied.remove": "Poista Oodi++:sta",
+            "schedule.actions.title": "Työkalut:",
+            "schedule.actions.remove": "Poista",
+            "schedule.actions.exportIcal": "Vie iCal-tiedostoon",
+            "schedule.empty.allInPast": "Kaikki valitut aktiviteetit ovat menneisyydessä. Valitse lisää aktiviteetteja näyttääksesi lukujärjestyksen.",
+            "schedule.empty.noSelection": "Valitse aktiviteetteja Oodista näyttääksesi lukujärjestyksen.",
+            "schedule.dataUpdate.required": "Tämän aktiviteetin data on vanhentuneessa muodossa. Käy sen kurssisivulla päivittääksesi sen.",
+            "settings.appUpdated": fmt`Oodi++ on päivitetty versioon ${0}. Tässä uudet ominaisuudet.`,
+            "settings.export.file": "Vie data tiedostoon",
+            "settings.export.text": "Vie data tekstinä",
+            "settings.export.text.prompt": "Kopioi tietosi tästä:",
+            "settings.import.confirm": "Haluatko varmasti POISTAA PYSYVÄSTI kaikki Oodi++:aan lisätyt aktiviteetit ja korvata ne tuoduilla?",
+            "settings.import.failed.file": "Aktiviteettien tuominen epäonnistui. Syöttämäsi teksti on todennäköisesti rikki tai virheellinen. Aiemmat aktiviteettisi ovat ennallaan.",
+            "settings.import.failed.text": "Aktiviteettien tuominen epäonnistui. Valitsemasi tiedosto on todennäköisesti rikki tai virheellinen. Aiemmat aktiviteettisi ovat ennallaan.",
+            "settings.import.file": "Tuo data tiedostosta",
+            "settings.import.success": fmt`${0} aktiviteettia tuotiin.`,
+            "settings.import.text": "Tuo data tekstinä",
+            "settings.import.text.prompt": "Syötä viety teksti:",
+            "settings.language": "Oodi++:n kieli synkronoidaan automaattisesti Oodin kielen kanssa.",
+            "settings.releaseNotes": "Versiohistoria",
+            "settings.reset": "Nollaa data",
+            "settings.reset.confirm": "Haluatko varmasti POISTAA PYSYVÄSTI kaikki Oodi++:aan lisätyt aktiviteetit?",
+            "settings.theme": "Teema: ",
+            "settings.theme.dark": "Tumma",
+            "settings.theme.light": "Vaalea",
+            "settings.title": "Asetukset",
+            "update.available": fmt`Uusi versio Oodi++:sta on saatavilla: ${0}!`,
+            "update.check": "Tarkista",
+            "update.checking": "Tarkistetaan päivityksiä\u2026",
+            "update.failed": "Päivitysten tarkistaminen epäonnistui.",
+            "update.install": "Klikkaa tästä asentaaksesi sen, sitten päivitä sivu: ",
+            "update.lastCheck": fmt`Päivitykset tarkistettu viimeksi: ${0}`,
+        },
+    },
+    sv: {
+        weekdays: ["må", "ti", "on", "to", "fr", "lö", "sö"],
+        messages: {},
+    },
+    en: {
+        weekdays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+        messages: {
+            "alert.dataUpdate.available": fmt`${0} activities on this page have changed since they were added to Oodi++. `,
+            "alert.dataUpdate.required": fmt`${0} activities are using an outdated data format. Visit their course pages to update them.`,
+            "alert.dataUpdate.updateAll": "Update all",
+            "appTitle": fmt`Oodi++ ${0}`,
+            "ical.title": "Oodi++ Schedule",
+            "ical.description": fmt`Exported from Oodi++ ${0} at ${1}`,
+            "opettaptied.add": "Add to Oodi++",
+            "opettaptied.dataUpdate": "Update in Oodi++",
+            "opettaptied.dataUpdate.tooltip": "Click to update the activity with the same name in Oodi++ with the details from this page",
+            "opettaptied.inpast": "This activity is in the past.",
+            "opettaptied.remove": "Remove from Oodi++",
+            "schedule.actions.title": "Schedule tools:",
+            "schedule.actions.remove": "Remove",
+            "schedule.actions.exportIcal": "Export iCal",
+            "schedule.empty.allInPast": "All currently selected activities are in the past. Select more activities from Oodi to display a schedule.",
+            "schedule.empty.noSelection": "Select activities from Oodi to display a schedule.",
+            "schedule.dataUpdate.required": "This activity's data is in an outdated format. Visit its course page to update it.",
+            "settings.appUpdated": fmt`Oodi++ was updated to version ${0}. Here's what's new.`,
+            "settings.export.file": "Export data to file",
+            "settings.export.text": "Export data as text",
+            "settings.export.text.prompt": "Copy your schedule here:",
+            "settings.import.confirm": "Are you sure you want to PERMANENTLY DELETE all activities added to Oodi++ and replace them with imported ones?",
+            "settings.import.failed.file": "Failed to import activities. Most likely the text you entered is broken or incorrect. Your previous activities have been preserved.",
+            "settings.import.failed.text": "Failed to import activities. Most likely the file you chose is broken or incorrect. Your previous activities have been preserved.",
+            "settings.import.file": "Import data from file",
+            "settings.import.success": fmt`Successfully imported ${0} activities.`,
+            "settings.import.text": "Import data as text",
+            "settings.import.text.prompt": "Enter the exported text:",
+            "settings.language": "The language of Oodi++ is automatically synchronized with Oodi's language.",
+            "settings.releaseNotes": "Release notes",
+            "settings.reset": "Reset data",
+            "settings.reset.confirm": "Are you sure you want to PERMANENTLY DELETE all activities added to Oodi++?",
+            "settings.theme": "Theme: ",
+            "settings.theme.dark": "Dark",
+            "settings.theme.light": "Light",
+            "settings.title": "Settings",
+            "update.available": fmt`A new version of Oodi++ is available: ${0}!`,
+            "update.check": "Check",
+            "update.checking": "Checking for update\u2026",
+            "update.failed": "Update check failed.",
+            "update.install": "Click here to install it, then refresh the page: ",
+            "update.lastCheck": fmt`Last update check: ${0}`,
+        },
+    },
+}
+
+export const locale = LOCALES[language]
+
+function getTranslation(key: string): LocaleMessage {
+    // by default, return English string, but update the locale to deduplicate the warnings
+    if (!(key in locale.messages)) {
+        if (!(key in LOCALES["en"].messages)) throw new Error(`invalid translation key ${key}`)
+        console.warn(`Untranslated string in ${language}: ${key}`)
+        locale.messages[key] = LOCALES["en"].messages[key]
+    }
+    return locale.messages[key]
+}
+
+/** Gets a plain string translation. */
+export function loc(key: TemplateStringsArray | string): string {
+    return getTranslation(typeof key === "string" ? key : key[0]) as string
+}
+
+/** Gets a formatted string translation */
+export function locf([key]: TemplateStringsArray): LocaleFormat {
+    return getTranslation(typeof key === "string" ? key : key[0]) as LocaleFormat
 }

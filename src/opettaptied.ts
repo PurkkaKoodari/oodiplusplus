@@ -3,7 +3,7 @@
 import {Activity, Course, Instance} from "./classes"
 import {deselectActivity, selectActivity, saveSelectedActivities, updateActivities, getExistingSelectedActivity, isActivityHovered, setHoveredActivity} from "./schedule"
 import {requestSidebarFocus} from "./sidebar"
-import {COURSE_INFO_KEYS} from "./locales"
+import {COURSE_INFO_KEYS, loc, locf} from "./locales"
 import {$make, ONE_DAY, ONE_WEEK} from "./utils"
 
 /** All activities parsed from opettaptied.jsp. */
@@ -130,8 +130,8 @@ export function parseOpettaptied() {
             // create "Update in Oodi++" button
             const $updateButton = $make("button")
                     .attr("type", "button")
-                    .text("Update in Oodi++")
-                    .attr("title", "Click to update the activity with the same name in Oodi++ with the details from this page")
+                    .text(loc`opettaptied.dataUpdate`)
+                    .attr("title", loc`opettaptied.dataUpdate.tooltip`)
                     .click(() => {
                 activity.update()
                 saveSelectedActivities()
@@ -145,7 +145,7 @@ export function parseOpettaptied() {
                 // make select button active/inactive and update its text
                 $selectButton
                         .prop("disabled", activity.inPast && !activity.selected)
-                        .text(activity.selected ? "Remove from Oodi++" : "Add to Oodi++")
+                        .text(activity.selected ? loc`opettaptied.remove` : loc`opettaptied.add`)
                 // show update button if necessary
                 $updateButton.toggle(activity.updatedActivity !== null && !activity.inPast)
             }
@@ -162,7 +162,7 @@ export function parseOpettaptied() {
             // add explanation if activity is in the past
             if (activity.inPast) {
                 $selectButton.after(
-                    $make("div").text("This activity is in the past.")
+                    $make("div").text(loc`opettaptied.inpast`)
                 )
             }
 
@@ -178,11 +178,11 @@ export function parseOpettaptied() {
     if (updateableOnThisPage > 0) {
         $activityDataUpdateable
                 .addClass("opp-alert-text")
-                .append(`${updateableOnThisPage} activities on this page have changed since they were added to Oodi++. `)
+                .append(locf`alert.dataUpdate.available`(updateableOnThisPage))
                 .append(
                     $make("button")
                             .attr("type", "button")
-                            .text("Update all")
+                            .text(loc`alert.dataUpdate.updateAll`)
                             .click(() => {
                                 for (const activity of opettaptiedActivities) {
                                     if (activity.updatedActivity !== null) activity.update()

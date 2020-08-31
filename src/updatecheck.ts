@@ -1,7 +1,8 @@
 // updatecheck.ts
 
 import {requestSidebarFocus} from "./sidebar"
-import {language} from "./locales"
+import {language, loc, locf} from "./locales"
+import {$releaseNotes} from "./settings"
 import {$make} from "./utils"
 
 /** URL of the built script upstream. */
@@ -43,7 +44,7 @@ export const $updateCheckInfo = $make("div")
         .append(
             $make("button")
                     .attr("type", "button")
-                    .text("Check")
+                    .text(loc`update.check`)
                     .click(checkVersionOnline)
         )
 
@@ -52,9 +53,11 @@ export const $newVersionInfo = $make("div")
         .addClass("opp-new-version")
         .hide()
 
-/** Checks for an update, reusing a previous version check if it's fresh enough. */
+/** Adds update things to UI and checks for an update, reusing a previous version check if it's fresh enough. */
 export function initUpdateCheck() {
     if (typeof GM_xmlhttpRequest !== "function" || typeof GM_setValue !== "function" || typeof GM_getValue !== "function") return
+
+    $releaseNotes.before($newVersionInfo, $updateCheckInfo)
 
     // don't make a server request every time to save bandwidth
     const lastUpdateCheck = GM_getValue("lastUpdateCheck", null)
@@ -62,13 +65,13 @@ export function initUpdateCheck() {
         checkVersionOnline()
     } else {
         upstreamVersionReceived(lastUpdateCheck.version)
-        $updateCheckState.text(`Last update check: ${new Date(lastUpdateCheck.last).toLocaleString(language)}`)
+        $updateCheckState.text(locf`update.lastCheck`(new Date(lastUpdateCheck.last).toLocaleString(language)))
     }
 }
 
 /** Forces a check of the latest upstream version. */
 function checkVersionOnline() {
-    $updateCheckState.text(`Checking for update\u2026`)
+    $updateCheckState.text(loc`update.checking`)
     // load script file from server
     GM_xmlhttpRequest({
         method: "GET",
@@ -80,17 +83,17 @@ function checkVersionOnline() {
             const versionMatch = /\/\/ @version\s+([0-9.]+)/.exec(responseText)
             if (!versionMatch) {
                 console.error("Oodi++ update check failed: invalid userscript received")
-                $updateCheckState.text("Update check failed.")
+                $updateCheckState.text(loc`update.failed`)
                 scheduleNextUpdateCheck(false)
                 return
             }
             scheduleNextUpdateCheck(true, versionMatch[1])
-            $updateCheckState.text(`Last update check: ${new Date().toLocaleString(language)}`)
+            $updateCheckState.text(locf`update.lastCheck`(new Date().toLocaleString(language)))
             upstreamVersionReceived(versionMatch[1])
         },
         onerror() {
             console.error("Oodi++ update check failed: request failed")
-            $updateCheckState.text("Update check failed.")
+            $updateCheckState.text(loc`update.failed`)
             scheduleNextUpdateCheck(false)
         }
     })
@@ -107,11 +110,11 @@ function upstreamVersionReceived(upstreamVersion: string) {
                 .append(
                     $make("h3")
                             .addClass("opp-alert-text")
-                            .text(`A new version of Oodi++ is available: ${upstreamVersion}!`)
+                            .text(locf`update.available`(upstreamVersion))
                 )
                 .append(
                     $make("div")
-                            .append("Click here to install it, then refresh the page: ")
+                            .append(loc`update.install`)
                             .append(
                                 $make("a")
                                         .attr("href", UPDATE_URL)

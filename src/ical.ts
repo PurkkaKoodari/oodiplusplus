@@ -1,7 +1,7 @@
 // ical.ts: iCal export
 
 import {Activity, Instance} from "./classes"
-import {language} from "./locales"
+import {language, loc, locf} from "./locales"
 import {getSelectedActivities} from "./schedule"
 import {downloadFile} from "./utils"
 
@@ -38,10 +38,10 @@ BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:-//PurkkaKoodari//Oodi++ ${VERSION}//EN
 METHOD:PUBLISH
-NAME:Oodi++ Schedule
-DESCRIPTION:Exported from Oodi++ ${VERSION} at ${new Date().toLocaleString(language)}
-X-WR-CALNAME:Oodi++ Schedule
-X-WR-CALDESC:Exported from Oodi++ ${VERSION} at ${new Date().toLocaleString(language)}
+NAME:${loc`ical.title`}
+DESCRIPTION:${locf`ical.description`(VERSION, new Date().toLocaleString(language))}
+X-WR-CALNAME:${loc`ical.title`}
+X-WR-CALDESC:${locf`ical.description`(VERSION, new Date().toLocaleString(language))}
 `
     for (const activity of activities) {
         let instanceNo = 0
