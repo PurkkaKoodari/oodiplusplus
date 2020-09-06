@@ -1,5 +1,7 @@
 // locales.ts: localization (including localization of page parsing)
 
+import $ from "jquery"
+
 /** The language code extracted from the page. */
 export const language: string = (() => {
     let langAttr = $("html").attr("lang")!
@@ -61,6 +63,19 @@ export const LOCALES: MapObj<Locale> = {
             "settings.export.file": "Vie data tiedostoon",
             "settings.export.text": "Vie data tekstinä",
             "settings.export.text.prompt": "Kopioi tietosi tästä:",
+            "settings.ical.format": "iCal-vienti",
+            "settings.ical.format.description": "Tapahtuman kuvaus:",
+            "settings.ical.format.help": `\
+Käytä näitä symboleja iCal-tapahtumien muotoiluun:
+%c \u2013 kurssikoodi, kuten CS-A1234
+%n \u2013 kurssin nimi, kuten Ohjelmointi 1
+%t \u2013 aktiviteetin tyyppi, kuten Luento
+%a \u2013 aktiviteetin koodi, kuten L01
+%l \u2013 sijainti
+%s \u2013 alkupäivä ja -aika
+%e \u2013 loppupäivä ja -aika
+%u \u2013 WebOodi-URL`,
+            "settings.ical.format.title": "Tapahtuman nimi:",
             "settings.import.confirm": "Haluatko varmasti POISTAA PYSYVÄSTI kaikki Oodi++:aan lisätyt aktiviteetit ja korvata ne tuoduilla?",
             "settings.import.failed.file": "Aktiviteettien tuominen epäonnistui. Syöttämäsi teksti on todennäköisesti rikki tai virheellinen. Aiemmat aktiviteettisi ovat ennallaan.",
             "settings.import.failed.text": "Aktiviteettien tuominen epäonnistui. Valitsemasi tiedosto on todennäköisesti rikki tai virheellinen. Aiemmat aktiviteettisi ovat ennallaan.",
@@ -72,7 +87,7 @@ export const LOCALES: MapObj<Locale> = {
             "settings.releaseNotes": "Versiohistoria",
             "settings.reset": "Nollaa data",
             "settings.reset.confirm": "Haluatko varmasti POISTAA PYSYVÄSTI kaikki Oodi++:aan lisätyt aktiviteetit?",
-            "settings.theme": "Teema: ",
+            "settings.theme": "Teema",
             "settings.theme.dark": "Tumma",
             "settings.theme.light": "Vaalea",
             "settings.title": "Asetukset",
@@ -112,6 +127,19 @@ export const LOCALES: MapObj<Locale> = {
             "settings.export.file": "Export data to file",
             "settings.export.text": "Export data as text",
             "settings.export.text.prompt": "Copy your schedule here:",
+            "settings.ical.format": "iCal export",
+            "settings.ical.format.description": "Event description:",
+            "settings.ical.format.help": `\
+Use these symbols to format iCal events:
+%c \u2013 course code, such as CS-A1234
+%n \u2013 course name, such as Programming 1
+%t \u2013 activity type, such as Lecture
+%a \u2013 activity code, such as L01
+%l \u2013 location
+%s \u2013 start time/date
+%e \u2013 end time/date
+%u \u2013 WebOodi URL`,
+            "settings.ical.format.title": "Event title:",
             "settings.import.confirm": "Are you sure you want to PERMANENTLY DELETE all activities added to Oodi++ and replace them with imported ones?",
             "settings.import.failed.file": "Failed to import activities. Most likely the text you entered is broken or incorrect. Your previous activities have been preserved.",
             "settings.import.failed.text": "Failed to import activities. Most likely the file you chose is broken or incorrect. Your previous activities have been preserved.",
@@ -123,7 +151,7 @@ export const LOCALES: MapObj<Locale> = {
             "settings.releaseNotes": "Release notes",
             "settings.reset": "Reset data",
             "settings.reset.confirm": "Are you sure you want to PERMANENTLY DELETE all activities added to Oodi++?",
-            "settings.theme": "Theme: ",
+            "settings.theme": "Theme",
             "settings.theme.dark": "Dark",
             "settings.theme.light": "Light",
             "settings.title": "Settings",

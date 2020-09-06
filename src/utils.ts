@@ -1,9 +1,12 @@
 // utils.ts: general utility functions
 
+import {useState, useEffect} from "preact/hooks"
+import $ from "jquery"
+
 
 
 /** Creates a named HTML element. Same as $("<nodeName></nodeName>") but faster and safer. */
-export function $make<T extends HTMLElement = HTMLElement>(nodeName: string): JQuery<T> {
+$.make = function <T extends HTMLElement = HTMLElement>(nodeName: string): JQuery<T> {
     return $(document.createElement(nodeName)) as JQuery<T>
 }
 
@@ -13,7 +16,7 @@ export function $make<T extends HTMLElement = HTMLElement>(nodeName: string): JQ
 export function downloadFile(contents: string, fileName: string, mimeType: string) {
     const blob = new Blob([contents], {type: mimeType})
     const objectUrl = URL.createObjectURL(blob)
-    const $link = $make("a")
+    const $link = $.make("a")
             .attr("href", objectUrl)
             .attr("download", fileName)
             .hide()
@@ -43,3 +46,63 @@ export const timeOfDay = (date: Date) => (date.getTime() - date.getTimezoneOffse
 export const thisMonday = new Date()
 thisMonday.setTime(thisMonday.getTime() - timeOfDay(thisMonday))
 while (thisMonday.getDay() != 1) thisMonday.setTime(thisMonday.getTime() - ONE_DAY)
+
+
+
+/** Creates an array with the numbers from start to end-1, like Python's range. */
+export function range(start: number, end?: number) {
+    if (end === undefined) {
+        end = start
+        start = 0
+    }
+    if (end <= start) return []
+    return Array(end - start).fill(null).map((_, pos) => pos + start)
+}
+
+
+
+type Listener<T> = (value: T) => void
+
+/** Allows for listening for changes in a value. */
+export class Observable<T> {
+    private current: T
+    private listeners: (Listener<T>)[] = []
+
+    constructor(value: T) {
+        this.current = value
+    }
+
+    get value() {
+        return this.current
+    }
+
+    set value(value: T) {
+        this.current = value
+        this.changed()
+    }
+
+    changed() {
+        for (const listener of this.listeners) listener(this.current)
+    }
+
+    addListener(listener: Listener<T>): Listener<T> {
+        this.listeners.push(listener)
+        return listener
+    }
+
+    removeListener(listener: Listener<T>) {
+        this.listeners.splice(this.listeners.findIndex(list => list === listener), 1)
+    }
+}
+
+/** Observes an Observable via a React hook. */
+export function useObservable<T>(observable: Observable<T>): T {
+    const [stored, setStored] = useState(observable.value)
+
+    useEffect(() => {
+        const listener = observable.addListener(setStored)
+        return () => observable.removeListener(listener)
+    })
+
+    return stored
+}

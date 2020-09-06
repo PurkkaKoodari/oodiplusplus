@@ -1,5 +1,4 @@
 TODO:
-- fix text overflowing in timetable
 - add backend sync
 - resizable schedule view
 - (automatically?) prune activities in past

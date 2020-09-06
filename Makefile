@@ -1,4 +1,4 @@
-SOURCES=$(wildcard src/*.ts)
+SOURCES=$(wildcard src/*.ts src/*.tsx)
 OUTPUTS=oodiplusplus.autoupdate.user.js oodiplusplus.autocheck.user.js oodiplusplus.folio.user.js
 WEBPACK=node_modules/.bin/webpack
 

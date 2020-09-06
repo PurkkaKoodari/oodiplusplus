@@ -5,6 +5,10 @@
         "strict": true,
         "skipLibCheck": true,
         "allowJs": true,
-        "moduleResolution": "node"
+        "moduleResolution": "node",
+        "jsx": "react",
+        "jsxFactory": "h",
+        "jsxFragmentFactory": "Fragment",
+        "allowSyntheticDefaultImports": true
     }
 }

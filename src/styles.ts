@@ -1,5 +1,7 @@
 // styles.ts: stylesheet for the app
 
+import $ from "jquery"
+
 type Theme = Readonly<{
     background: string
     text: string
@@ -15,6 +17,10 @@ type Theme = Readonly<{
     buttonText: string
     buttonHoverBackground: string
     buttonActiveBackground: string
+
+    tooltipBackground: string
+    tooltipBorder: string
+    tooltipText: string
 
     scheduleBoxBorder: string
     scheduleBoxHoverBackground1: string
@@ -40,6 +46,10 @@ export const THEMES: MapObj<Theme> = {
         buttonHoverBackground: "#f3f3f3",
         buttonActiveBackground: "#ccf",
 
+        tooltipBackground: "#fff",
+        tooltipBorder: "#000",
+        tooltipText: "#000",
+
         scheduleBoxBorder: "#000",
         scheduleBoxHoverBackground1: "#eef",
         scheduleBoxHoverBackground2: "#ccf",
@@ -61,6 +71,10 @@ export const THEMES: MapObj<Theme> = {
         buttonText: "#fff",
         buttonHoverBackground: "#444",
         buttonActiveBackground: "#449",
+
+        tooltipBackground: "#080808",
+        tooltipBorder: "#ccc",
+        tooltipText: "#fff",
 
         scheduleBoxBorder: "#fff",
         scheduleBoxHoverBackground1: "#006",
@@ -132,6 +146,10 @@ export function setTheme(themeName: string) {
     z-index: 0;
     height: 100vh;
     overflow: auto;
+    transition: margin-right 0.3s ease;
+}
+body.opp-sidebar-open .opp-body-wrapper {
+    margin-right: 540px;
 }
 .opp-sidebar-wrapper {
     position: fixed;
@@ -139,11 +157,16 @@ export function setTheme(themeName: string) {
     top: 0;
     z-index: 1000;
     height: 100vh;
+    width: 0;
+    transition: width 0.3s ease;
     margin: 0;
     padding: 0;
     border-left: 1px solid #000;
     background: ${theme.background};
     font-size: 14px;
+}
+body.opp-sidebar-open .opp-sidebar-wrapper {
+    width: 540px;
 }
 .opp-sidebar-content {
     width: 540px;
@@ -235,7 +258,7 @@ export function setTheme(themeName: string) {
 
 /* styles for sidebar header/release notes/settings */
 .opp-sidebar-header {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 .opp-sidebar-header .opp-header, .opp-update-check {
     display: flex;
@@ -250,23 +273,59 @@ export function setTheme(themeName: string) {
 .opp-sidebar-header .opp-header button {
     margin-left: 10px;
 }
+.opp-settings-wrapper {
+    height: 0;
+    overflow: hidden;
+}
+.opp-settings-wrapper.opp-open {
+    height: auto;
+}
 .opp-release-notes, .opp-settings {
-    margin-top: 10px;
     padding: 0 10px;
+    margin-bottom: 10px;
     background: ${theme.settingsBackground};
     border: 1px solid ${theme.settingsBorder};
 }
-.opp-settings > div {
+.opp-settings .opp-horizontal, .opp-settings .opp-vertical {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
     margin: 10px 0;
 }
-.opp-settings > div > * {
-    margin-bottom: 5px;
+.opp-settings .opp-horizontal {
+    flex-wrap: wrap;
+    align-items: baseline;
 }
-.opp-settings > div button {
-    margin-right: 5px;
+.opp-settings .opp-horizontal > * {
+    margin: 0 5px 5px 0;
+}
+.opp-settings .opp-vertical {
+    align-items: flex-start;
+}
+.opp-settings .opp-vertical > div {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+.opp-settings .opp-vertical > div > * {
+    margin: 0 0 5px 0;
+}
+.opp-settings fieldset {
+    border: 1px solid ${theme.buttonBorder};
+}
+.opp-settings textarea {
+    resize: vertical;
+}
+.opp-help-tooltip {
+    display: inline-block;
+    width: 1.2em;
+    height: 1.2em;
+    margin-left: 5px;
+    line-height: 1.2em;
+    text-align: center;
+    border-radius: 100%;
+    border: 1px solid ${theme.buttonBorder};
+    background: ${theme.buttonBackground};
+    color: ${theme.buttonText};
+    cursor: help;
 }
 
 /* styles for schedule view */
@@ -295,9 +354,16 @@ export function setTheme(themeName: string) {
     align-items: center;
     box-sizing: border-box;
     border: 1px solid ${theme.scheduleBoxBorder};
+    overflow: hidden;
 }
 .opp-schedule .opp-hour, .opp-schedule .opp-day {
     font-weight: bold;
+}
+.opp-schedule .opp-activity > span {
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    hyphens: auto;
+    flex: 0 1 auto;
 }
 @keyframes opp-schedule-hovered-activity {
     0% {
@@ -341,6 +407,22 @@ export function setTheme(themeName: string) {
     font-size: 1.2em;
     line-height: 1;
     padding: 5px;
+    cursor: help;
+}
+
+/* styles for tooltip */
+.opp-tooltip {
+    position: fixed;
+    z-index: 3000;
+    max-width: 400px;
+    border: 1px solid ${theme.tooltipBorder};
+    padding: 10px;
+    box-sizing: border-box;
+    font-size: 14px;
+    background: ${theme.tooltipBackground};
+    color: ${theme.tooltipText};
+    white-space: pre-line;
+    pointer-events: none;
 }
     `)
 }

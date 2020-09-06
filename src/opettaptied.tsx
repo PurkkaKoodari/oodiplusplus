@@ -1,17 +1,17 @@
 // opettaptied.ts: parsing and selecting activities from opettaptied.jsp
 
+import {h} from "preact"
+import $ from "jquery"
+
 import {Activity, Course, Instance} from "./classes"
-import {deselectActivity, selectActivity, saveSelectedActivities, updateActivities, getExistingSelectedActivity, isActivityHovered, setHoveredActivity} from "./schedule"
 import {requestSidebarFocus} from "./sidebar"
 import {COURSE_INFO_KEYS, loc, locf} from "./locales"
-import {$make, ONE_DAY, ONE_WEEK} from "./utils"
+import {ONE_DAY, ONE_WEEK, useObservable} from "./utils"
+import {deselectActivity, getExistingSelectedActivity, selectActivity, selectedActivities, hoveredActivity, unhoverActivity, hoverActivity} from "./activities"
 
-/** All activities parsed from opettaptied.jsp. */
-const opettaptiedActivities: Activity[] = []
-
-/** Parses activities from opettaptied.jsp. */
-export function parseOpettaptied() {
-    if (!location.pathname.startsWith("/a/opettaptied.jsp")) return
+/** Parsed activities from opettaptied.jsp. */
+export const opettaptiedActivities = (() => {
+    if (!location.pathname.startsWith("/a/opettaptied.jsp")) return []
 
     // parse OpetTap from url
     const opetTapIdMatch = /\bOpetTap=(\d+)\b/.exec(location.search)
@@ -40,9 +40,11 @@ export function parseOpettaptied() {
     // if we can't find these, there's very little we can do
     if (!courseInfo.code || !courseInfo.name || !opetTapId) {
         console.error("Oodi++ couldn't parse course name or code from the page.")
-        return
+        return []
     }
     const course = new Course(courseInfo.code, courseInfo.name)
+
+    const activities: Activity[] = []
 
     // walk each activity type table
     $("form[name=ilmotForm] > table.kll > tbody").each(function () {
@@ -117,10 +119,10 @@ export function parseOpettaptied() {
             // don't add anything to activities without instances
             if (!activity.selected && !activity.instances.length) return
 
-            opettaptiedActivities.push(activity)
+            activities.push(activity)
 
             // create "Add to Oodi++" button
-            const $selectButton = $make("button")
+            const $selectButton = $.make("button")
                     .attr("type", "button")
                     .click(() => {
                 if (activity.selected) deselectActivity(activity)
@@ -128,20 +130,19 @@ export function parseOpettaptied() {
                 requestSidebarFocus()
             })
             // create "Update in Oodi++" button
-            const $updateButton = $make("button")
+            const $updateButton = $.make("button")
                     .attr("type", "button")
-                    .text(loc`opettaptied.dataUpdate`)
                     .attr("title", loc`opettaptied.dataUpdate.tooltip`)
+                    .text(loc`opettaptied.dataUpdate`)
                     .click(() => {
                 activity.update()
-                saveSelectedActivities()
-                updateActivities(activity)
+                selectedActivities.changed()
             })
 
             // method to update the stuff added to this page
             activity.updateOpettaptied = () => {
                 // update hover state
-                $(this).parent().closest("tr").toggleClass("opp-hovered-activity", isActivityHovered(activity))
+                $(this).parent().closest("tr").toggleClass("opp-hovered-activity", hoveredActivity.value === activity)
                 // make select button active/inactive and update its text
                 $selectButton
                         .prop("disabled", activity.inPast && !activity.selected)
@@ -153,7 +154,7 @@ export function parseOpettaptied() {
 
             // add actions to row
             $(this).children("td:nth-child(3)").append(
-                $make("div")
+                $.make("div")
                         .addClass("opp-activity-actions")
                         .append($selectButton)
                         .append($updateButton)
@@ -162,46 +163,52 @@ export function parseOpettaptied() {
             // add explanation if activity is in the past
             if (activity.inPast) {
                 $selectButton.after(
-                    $make("div").text(loc`opettaptied.inpast`)
+                    $.make("div").text(loc`opettaptied.inpast`)
                 )
             }
 
             // add hover listeners
             $(this).parent().closest("tr")
-                    .on("mouseenter", () => setHoveredActivity(activity))
-                    .on("mouseleave", () => isActivityHovered(activity) && setHoveredActivity(null))
+                    .on("mouseenter", () => hoverActivity(activity))
+                    .on("mouseleave", () => unhoverActivity(activity))
         })
     })
 
-    // add notice and blink opener button if changes are detected
-    const updateableOnThisPage = opettaptiedActivities.filter(activity => activity.updatedActivity !== null).length
-    if (updateableOnThisPage > 0) {
-        $activityDataUpdateable
-                .addClass("opp-alert-text")
-                .append(locf`alert.dataUpdate.available`(updateableOnThisPage))
-                .append(
-                    $make("button")
-                            .attr("type", "button")
-                            .text(loc`alert.dataUpdate.updateAll`)
-                            .click(() => {
-                                for (const activity of opettaptiedActivities) {
-                                    if (activity.updatedActivity !== null) activity.update()
-                                }
-                                saveSelectedActivities()
-                                updateActivities()
-                                $activityDataUpdateable.hide()
-                            })
-                )
-                .show()
-        requestSidebarFocus()
-    }
-}
+    return activities
+})()
 
 /** Updates the injected HTML in opettaptied.jsp. */
-export function updateOpettaptiedActivities(activities: Activity[]) {
-    const opettaptiedUpdates = activities.length === 0 ? opettaptiedActivities : activities
-    for (const opettaptiedActivity of opettaptiedUpdates) opettaptiedActivity.updateOpettaptied()
+function updateOpettaptiedActivities() {
+    for (const activity of opettaptiedActivities) activity.updateOpettaptied()
 }
 
-/** Notification for when activity data on the current page can be updated. */
-export const $activityDataUpdateable = $make("p").hide()
+selectedActivities.addListener(updateOpettaptiedActivities)
+hoveredActivity.addListener(updateOpettaptiedActivities)
+
+export function OpettaptiedUpdateableNotification() {
+    // even though this is not used, pull it in to ensure we get updated
+    useObservable(selectedActivities)
+
+    // add notice and blink opener button if changes are detected
+    const updateable = updateableOnThisPage()
+    if (!updateable) return null
+
+    function updateAllActivities() {
+        for (const activity of opettaptiedActivities) {
+            if (activity.updatedActivity !== null) activity.update()
+        }
+        selectedActivities.changed()
+    }
+
+    return (
+        <p className="opp-alert-text">
+            {locf`alert.dataUpdate.available`(updateable)}
+            <button type="button" onClick={updateAllActivities}>{loc`alert.dataUpdate.updateAll`}</button>
+        </p>
+    )
+}
+
+/** Gets the number of activities with outdated data that can be updated on this opettaptied.jsp page. */
+export function updateableOnThisPage() {
+    return opettaptiedActivities.filter(activity => activity.updatedActivity !== null).length
+}

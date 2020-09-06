@@ -1,6 +1,6 @@
 // classes.ts: data classes
 
-import {isActivitySelected} from "./schedule"
+import {selectedActivities} from "./activities"
 import {thisMonday} from "./utils"
 
 /** Compared to Activity.dataVersion to see which activities need an update. */
@@ -87,12 +87,17 @@ export class Activity {
 
     /** Checks whether or not this activity is currently selected. */
     get selected() {
-        return isActivitySelected(this)
+        return selectedActivities.value.some(selected => selected.identifier === this.identifier)
     }
 
     /** Checks whether or not all instances of this activity are in the past. */
     get inPast() {
         return this.instances.every(instance => instance.start.getTime() < thisMonday.getTime())
+    }
+
+    /** Gets the URL to the activity's course page. */
+    get url() {
+        return `https://${location.host}/a/opettaptied.jsp?OpetTap=${this.opetTapId}`
     }
 
     /** Checks whether or not this activity needs a data update. */
@@ -185,26 +190,5 @@ export class Instance {
         if (typeof location !== "string") throw new Error("invalid instance location")
 
         return new Instance(activity, startDate, endDate, location)
-    }
-}
-
-/** Holds preprocessed data of an Instance for the purposes of timetable rendering. */
-export class RenderInstance {
-    instance: Instance
-    weekday: number
-    start: number
-    end: number
-    columns: {start: number, end: number} | null = null
-    
-    constructor(instance: Instance, weekday: number, start: number, end: number) {
-        this.instance = instance
-        this.weekday = weekday
-        this.start = start
-        this.end = end
-        this.columns = null
-    }
-
-    overlaps(other: RenderInstance): boolean {
-        return this !== other && this.weekday === other.weekday && this.start < other.end && other.start < this.end
     }
 }

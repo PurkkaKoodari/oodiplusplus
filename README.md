@@ -23,10 +23,13 @@ Tämän jälkeen lataa itse userscript. Se on saatavilla kolmena versiona:
   koodiin tehdä muutoksia huomaamattasi.
 - [Foliohattuversio](oodiplusplus.folio.user.js) ei tee mitään verkkopyyntöjä. Koska joku kuitenkin pyytää tätä.
 
+Skriptin dependencyinä ovat [Preact][preact] ja [jQuery][jquery], jotka sisältyvät tiedostoon. Jos haluat tarkistaa
+niiden minifioidut lähdekoodit, kyseiset tiedostot ovat [preact.module.js], [hooks.module.js] ja [jquery.slim.min.js].
+
 ## Buildaus
 
-Alkuperäinen lähdekoodi on saatavilla [GitLabissa][gitlab]. Se käyttää buildaukseen Webpackia ja TypeScriptiä, mutta konfiguraation
-tavoitteena on maksimoida lopputuloksen luettavuus.
+Alkuperäinen lähdekoodi on saatavilla [GitLabissa][gitlab] MIT-lisenssillä. Se käyttää buildaukseen Webpackia ja TypeScriptiä,
+mutta konfiguraation tavoitteena on maksimoida lopputuloksen luettavuus.
 
 Buildataksesi userscriptit suorita komennot `npm install` ja `make` (vaatii normaalin *nix-ympäristön sekä suhteellisen tuoreen Node.js:n).
 
@@ -34,3 +37,8 @@ Buildataksesi userscriptit suorita komennot `npm install` ja `make` (vaatii norm
 [tm-ff]: https://addons.mozilla.org/fi/firefox/addon/tampermonkey/
 [tm-chrome]: https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo
 [gitlab]: https://gitlab.com/PurkkaKoodari/oodiplusplus
+[preact]: https://preactjs.com/
+[jquery]: https://jquery.com/
+[preact.module.js]: https://unpkg.com/preact@latest?module
+[hooks.module.js]: https://unpkg.com/preact@latest/hooks/dist/hooks.module.js?module
+[jquery.slim.min.js]: https://code.jquery.com/jquery-3.5.1.slim.min.js

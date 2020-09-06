@@ -22,10 +22,13 @@ Then download the userscript itself. It's available in three editions:
   internet. Choose this option if you want to read through the code and make sure no changes are made without you noticing.
 - [Tinfoil hat edition](oodiplusplus.folio.user.js) makes no network requests. Because someone was always going to ask for this.
 
+The script depends on [Preact][preact] and [jQuery][jquery], which are included in the file. If you want to verify their minified
+source code, the files are [preact.module.js], [hooks.module.js] ja [jquery.slim.min.js].
+
 ## Building
 
-The original source code is available on [GitLab][gitlab]. The build process uses Webpack and TypeScript, but the configuration
-intends to maximize the readability of the result.
+The original source code is available on [GitLab][gitlab] under the MIT license. The build process uses Webpack and TypeScript,
+but the configuration intends to maximize the readability of the result.
 
 To build the userscripts just run `npm install` and `make` (requires a normal *nix environment and a relatively fresh Node.js).
 
@@ -33,3 +36,8 @@ To build the userscripts just run `npm install` and `make` (requires a normal *n
 [tm-ff]: https://addons.mozilla.org/fi/firefox/addon/tampermonkey/
 [tm-chrome]: https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo
 [gitlab]: https://gitlab.com/PurkkaKoodari/oodiplusplus
+[preact]: https://preactjs.com/
+[jquery]: https://jquery.com/
+[preact.module.js]: https://unpkg.com/preact@latest?module
+[hooks.module.js]: https://unpkg.com/preact@latest/hooks/dist/hooks.module.js?module
+[jquery.slim.min.js]: https://code.jquery.com/jquery-3.5.1.slim.min.js

@@ -3,6 +3,9 @@ const path = require("path")
 
 const scriptVersion = require("./package.json").version.replace(/(\.0)+$/, "")
 
+const preactVersion = require("preact/package.json").version
+const jqueryVersion = require("jquery/package.json").version
+
 module.exports = {
     mode: "none",
     entry: {
@@ -13,15 +16,18 @@ module.exports = {
     module: {
         rules: [
             {
-                test: /\.ts$/,
+                test: /\.tsx?$/,
                 use: "ts-loader",
                 include: path.resolve(__dirname, "src"),
             },
         ],
     },
     resolve: {
-        extensions: [".js", ".ts"],
+        extensions: [".js", ".ts", ".tsx"],
         modules: ["./node_modules", "./src"],
+        alias: {
+            jquery: "jquery/dist/jquery.slim.min.js",
+        },
     },
     plugins: [
         new webpack.ProgressPlugin((percentage, message, ...args) => {
@@ -47,21 +53,24 @@ module.exports = {
 // @connect      purkka.codes
 `
                 } else {
-                    scriptType = "(tinfoil hat mode)"
+                    scriptType = "tinfoil hat mode"
                 }
                 return `\
 // ==UserScript==
-// @name         Oodi++ (automatic update check)
+// @name         Oodi++ (${scriptType})
 // @namespace    https://purkka.codes/
 // @version      ${scriptVersion}
 // @description  Efficiently plan your timetable right in Oodi and export it to your calendar.
 // @author       PurkkaKoodari
 // @include      https://oodi.aalto.fi/*
-// @require      https://code.jquery.com/jquery-3.5.1.min.js#sha256=f7f6a5894f1d19ddad6fa392b2ece2c5e578cbf7da4ea805b6885eb6985b6e3d
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_addStyle
 ${update}// ==/UserScript==
+
+/*! Includes jQuery v${jqueryVersion} | (c) JS Foundation and other contributors | jquery.org/license */
+/*! Includes Preact v${preactVersion} | https://preactjs.com/ | MIT License */
+
 `
             },
             raw: true,
