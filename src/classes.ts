@@ -158,7 +158,7 @@ export class Activity {
         this.updatedActivity = null
     }
 
-    /** Serializes this activity to a JSON-compatible object. *//** Deserializes an activity from the form outputted by serialize(). */
+    /** Serializes this activity to a JSON-compatible object. */
     serialize(): SerializedActivity {
         return {
             course: this.course.serialize(),
