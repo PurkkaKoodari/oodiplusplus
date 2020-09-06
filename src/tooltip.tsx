@@ -44,9 +44,10 @@ function updateTooltip() {
                 .show()
 
         const width = $tooltip.outerWidth()!
+        const height = $tooltip.outerHeight()!
         $tooltip.css({
             left: `${mousePos.x + 10 + width > window.innerWidth ? mousePos.x - 10 - width : mousePos.x + 10}px`,
-            top: `${Math.max(0, mousePos.y - 10)}px`,
+            top: `${Math.max(0, Math.min(window.innerHeight - height, mousePos.y - 10))}px`,
         })
     } else {
         $tooltip.hide()
