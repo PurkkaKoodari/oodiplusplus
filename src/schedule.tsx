@@ -250,8 +250,27 @@ function NeedUpdateNotification() {
     if (!needUpdate) return null
 
     return (
-        <p className="opp-alert-text opp-outdated-format-alert">
+        <p className="opp-alert-text">
             {locf`alert.dataUpdate.required`(needUpdate)}
+        </p>
+    )
+}
+
+function DeletePastNotification() {
+    // even though this is not used, pull it in to ensure we get updated
+    useObservable(selectedActivities)
+
+    const inPast = activitiesInPast()
+    if (!inPast) return null
+
+    function deleteAllPast() {
+        selectedActivities.value = selectedActivities.value.filter(activity => !activity.inPast)
+    }
+
+    return (
+        <p className="opp-alert-text">
+            {locf`alert.deletePast`(inPast)}
+            <button type="button" onClick={deleteAllPast}>{loc`alert.deletePast.delete`}</button>
         </p>
     )
 }
@@ -261,7 +280,7 @@ export function ScheduleView({sidebarOpen}: {sidebarOpen: boolean}) {
     const hovered = useObservable(hoveredActivity)
 
     // compile a list of all instances
-    const activitiesToRender = Array.from(selected)
+    const activitiesToRender = [...selected]
     if (hovered && !hovered.selected) activitiesToRender.push(hovered)
     const allInstances = activitiesToRender.map(activity => activity.instances).flat()
     const anySelected = allInstances.length !== 0
@@ -323,6 +342,7 @@ export function ScheduleView({sidebarOpen}: {sidebarOpen: boolean}) {
         <>
             <NeedUpdateNotification />
             <OpettaptiedUpdateableNotification />
+            <DeletePastNotification />
             <div className="opp-schedule-actions">
                 <div>{loc`schedule.actions.title`}</div>
                 <ScheduleActionButton
@@ -346,5 +366,10 @@ export function ScheduleView({sidebarOpen}: {sidebarOpen: boolean}) {
 
 /** Gets the number of activities that are using an outdated data version. */
 export function needDataFormatUpdate() {
-    return Array.from(selectedActivities.value.values()).filter(activity => activity.needsUpdate).length
+    return selectedActivities.value.filter(activity => activity.needsUpdate).length
+}
+
+/** Gets the number of activities that have no instances in the future. */
+export function activitiesInPast() {
+    return selectedActivities.value.filter(activity => activity.inPast).length
 }

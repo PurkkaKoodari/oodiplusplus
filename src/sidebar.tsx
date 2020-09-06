@@ -5,7 +5,7 @@ import {useEffect, useState} from "preact/hooks"
 import $ from "jquery"
 
 import {SidebarHeader, unseenReleaseNotes} from "./settings"
-import {ScheduleView, needDataFormatUpdate} from "./schedule"
+import {ScheduleView, needDataFormatUpdate, activitiesInPast} from "./schedule"
 import {updateableOnThisPage} from "./opettaptied"
 import {Observable, useObservable} from "./utils"
 import {hoveredActivity, selectedActivities} from "./activities"
@@ -56,7 +56,7 @@ export function renderSidebar() {
     render(<Sidebar />, document.body, $sidebarWrapper[0])
 }
 
-const sidebarFocusRequested = new Observable(unseenReleaseNotes || needDataFormatUpdate() > 0 || updateableOnThisPage() > 0)
+const sidebarFocusRequested = new Observable(unseenReleaseNotes || needDataFormatUpdate() > 0 || updateableOnThisPage() > 0 || activitiesInPast() > 0)
 
 /** Starts blinking the sidebar opener if the sidebar is closed. */
 export function requestSidebarFocus() {

@@ -1,7 +1,6 @@
 TODO:
 - add backend sync
 - resizable schedule view
-- (automatically?) prune activities in past
 - add coloring of activities
 - location database
 - ensure dst handling works when adding getTime()s

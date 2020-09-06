@@ -160,6 +160,6 @@ function createIcalFromActivities(activities: Iterable<Activity>, format: IcalEx
 
 /** Converts selectedActivities to iCal format and opens a download dialog for the file. */
 export function exportSelectedActivitiesAsIcal(): void {
-    const icalContents = createIcalFromActivities(selectedActivities.value.values(), icalExportFormatStrings.value)
+    const icalContents = createIcalFromActivities(selectedActivities.value, icalExportFormatStrings.value)
     downloadFile(icalContents, "oodiplusplus.ics", "text/calendar")
 }
