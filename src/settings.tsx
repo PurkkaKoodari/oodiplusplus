@@ -6,8 +6,8 @@ import $ from "jquery"
 
 import {Activity} from "./classes"
 import {THEMES, getTheme, setTheme} from "./styles"
-import {getIcalExportFormatStrings, setIcalExportFormatStrings} from "./ical"
-import {downloadFile} from "./utils"
+import {DEFAULT_ICAL_EXPORT_FORMAT, icalExportFormatStrings} from "./ical"
+import {downloadFile, useObservable} from "./utils"
 import {locf, loc} from "./locales"
 import {Tooltip} from "./tooltip"
 import {deserializeActivities, selectedActivities, serializeSelectedActivities} from "./activities"
@@ -113,6 +113,8 @@ function Settings() {
         selectedActivities.value = []
     }
 
+    const icalFormatStrings = useObservable(icalExportFormatStrings)
+
     return (
         <div className="opp-settings">
             <h4>{loc`settings.title`}</h4>
@@ -135,27 +137,35 @@ function Settings() {
             </fieldset>
             <fieldset className="opp-vertical">
                 <legend>{loc`settings.ical.format`}</legend>
-                <div>
-                    <label for="opp-ical-title-format">
-                        {loc`settings.ical.format.title`}
-                        <IcalFormatHelpButton />
-                    </label>
-                    <input
-                            id="opp-ical-title-format"
-                            type="text"
-                            required={true}
-                            value={getIcalExportFormatStrings().title}
-                            onChange={e => setIcalExportFormatStrings({title: (e.target as HTMLInputElement).value})} />
-                    <label for="opp-ical-description-format">
-                        {loc`settings.ical.format.description`}
-                        <IcalFormatHelpButton />
-                    </label>
-                    <textarea
-                            id="opp-ical-description-format" 
-                            required={true}
-                            value={getIcalExportFormatStrings().description}
-                            onChange={e => setIcalExportFormatStrings({description: (e.target as HTMLInputElement).value})} />
-                </div>
+                <button type="button" onClick={() => icalExportFormatStrings.value = DEFAULT_ICAL_EXPORT_FORMAT}>
+                    {loc`settings.ical.format.reset`}
+                </button>
+                <label for="opp-ical-title-format">
+                    {loc`settings.ical.format.title`}
+                    <IcalFormatHelpButton />
+                </label>
+                <input
+                        id="opp-ical-title-format"
+                        type="text"
+                        required={true}
+                        value={icalFormatStrings.title}
+                        onChange={e => {
+                            const value = (e.target as HTMLInputElement).value
+                            if (!value.trim()) return
+                            icalExportFormatStrings.value = {...icalExportFormatStrings.value, title: value}
+                        }} />
+                <label for="opp-ical-description-format">
+                    {loc`settings.ical.format.description`}
+                    <IcalFormatHelpButton />
+                </label>
+                <textarea
+                        id="opp-ical-description-format" 
+                        required={true}
+                        value={icalFormatStrings.description}
+                        onChange={e => {
+                            const value = (e.target as HTMLInputElement).value
+                            icalExportFormatStrings.value = {...icalExportFormatStrings.value, description: value}
+                        }} />
             </fieldset>
             <div className="opp-horizontal">
                 <button type="button" onClick={exportText}>

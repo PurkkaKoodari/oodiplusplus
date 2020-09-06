@@ -3,7 +3,7 @@
 import {Activity, Instance} from "./classes"
 import {language, loc, locale, locf} from "./locales"
 import {selectedActivities} from "./activities"
-import {downloadFile, zeropad} from "./utils"
+import {downloadFile, Observable, zeropad} from "./utils"
 
 class IcalProperty {
     key: string
@@ -85,26 +85,21 @@ export type IcalExportFormatStrings = Readonly<{
     description: string
 }>
 
-// load current format strings
-let currentFormat: IcalExportFormatStrings = typeof GM_getValue === "function" ? GM_getValue("icalExportFormat") : null
-if (!currentFormat || !currentFormat.title || !currentFormat.description) {
-    currentFormat = {
-        title: "%c/%a %n",
-        description: "%c %n\n%t %a\n%u",
-    }
+export const DEFAULT_ICAL_EXPORT_FORMAT = {
+    title: "%c/%a %n",
+    description: "%c %n\n%t %a\n%u",
 }
 
-export function getIcalExportFormatStrings(): IcalExportFormatStrings {
-    return currentFormat
-}
+/** Format strings used for iCal exports. */
+export const icalExportFormatStrings = new Observable<IcalExportFormatStrings>((() => {
+    const loadedFormat = typeof GM_getValue === "function" ? GM_getValue("icalExportFormat") : null
+    if (!loadedFormat || !loadedFormat.title || !loadedFormat.description) return DEFAULT_ICAL_EXPORT_FORMAT
+    return loadedFormat
+})())
 
-export function setIcalExportFormatStrings(format: Partial<IcalExportFormatStrings>): void {
-    currentFormat = {
-        ...currentFormat,
-        ...format,
-    }
+icalExportFormatStrings.addListener(currentFormat => {
     if (typeof GM_setValue === "function") GM_setValue("icalExportFormat", currentFormat)
-}
+})
 
 /** Formats an event title or description. */
 function formatString(instance: Instance, format: string) {
@@ -165,6 +160,6 @@ function createIcalFromActivities(activities: Iterable<Activity>, format: IcalEx
 
 /** Converts selectedActivities to iCal format and opens a download dialog for the file. */
 export function exportSelectedActivitiesAsIcal(): void {
-    const icalContents = createIcalFromActivities(selectedActivities.value.values(), currentFormat)
+    const icalContents = createIcalFromActivities(selectedActivities.value.values(), icalExportFormatStrings.value)
     downloadFile(icalContents, "oodiplusplus.ics", "text/calendar")
 }

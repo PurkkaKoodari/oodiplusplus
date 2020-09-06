@@ -298,15 +298,14 @@ body.opp-sidebar-open .opp-sidebar-wrapper {
     margin: 0 5px 5px 0;
 }
 .opp-settings .opp-vertical {
-    align-items: flex-start;
-}
-.opp-settings .opp-vertical > div {
-    display: flex;
+    align-items: stretch;
     flex-direction: column;
-    flex: 1;
 }
-.opp-settings .opp-vertical > div > * {
+.opp-settings .opp-vertical > * {
     margin: 0 0 5px 0;
+}
+.opp-settings .opp-vertical > button {
+    align-self: flex-start;
 }
 .opp-settings fieldset {
     border: 1px solid ${theme.buttonBorder};

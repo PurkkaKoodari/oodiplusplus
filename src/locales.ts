@@ -92,6 +92,7 @@ Käytä näitä symboleja iCal-tapahtumien muotoiluun:
 %s \u2013 alkupäivä ja -aika
 %e \u2013 loppupäivä ja -aika
 %u \u2013 WebOodi-URL`,
+            "settings.ical.format.reset": "Palauta oletukset",
             "settings.ical.format.title": "Tapahtuman nimi:",
             "settings.import.confirm": "Haluatko varmasti POISTAA PYSYVÄSTI kaikki Oodi++:aan lisätyt aktiviteetit ja korvata ne tuoduilla?",
             "settings.import.failed.file": "Aktiviteettien tuominen epäonnistui. Syöttämäsi teksti on todennäköisesti rikki tai virheellinen. Aiemmat aktiviteettisi ovat ennallaan.",
@@ -177,6 +178,7 @@ Use these symbols to format iCal events:
 %s \u2013 start time/date
 %e \u2013 end time/date
 %u \u2013 WebOodi URL`,
+            "settings.ical.format.reset": "Restore defaults",
             "settings.ical.format.title": "Event title:",
             "settings.import.confirm": "Are you sure you want to PERMANENTLY DELETE all activities added to Oodi++ and replace them with imported ones?",
             "settings.import.failed.file": "Failed to import activities. Most likely the text you entered is broken or incorrect. Your previous activities have been preserved.",
