@@ -102,3 +102,18 @@ export function useObservable<T>(observable: Observable<T>): T {
 
     return stored
 }
+
+
+
+/** Template literal tag that allows a compact format for zeropadding numbers. */
+export function zeropad(strings: TemplateStringsArray, ...numbers: number[]) {
+    const result = [strings[0]]
+    for (let i = 1; i < strings.length; i++) {
+        const match = /^\[(\d+)\]/.exec(strings[i])
+        if (!match) throw new Error("invalid format")
+        const width = +match[1]
+        const rest = strings[i].substring(match[0].length)
+        result.push(numbers[i - 1].toString().padStart(width, "0") + rest)
+    }
+    return result.join("")
+}

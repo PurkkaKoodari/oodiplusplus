@@ -4,7 +4,7 @@ import {h, Fragment} from "preact"
 import {useState, useEffect} from "preact/hooks"
 
 import {requestSidebarFocus} from "./sidebar"
-import {language, loc, locf} from "./locales"
+import {language, loc, locale, locf} from "./locales"
 import {setUpdateCheckComponent} from "./settings"
 
 /** URL of the built script upstream. */
@@ -59,7 +59,7 @@ function UpdateCheck() {
         const lastUpdateCheck = GM_getValue("lastUpdateCheck", null)
         if (forcedCheck === null && lastUpdateCheck !== null && Date.now() < lastUpdateCheck.next) {
             setUpstreamVersion(lastUpdateCheck.version)
-            setStatus(locf`update.lastCheck`(new Date(lastUpdateCheck.last).toLocaleString(language)))
+            setStatus(locf`update.lastCheck`(locale.datetime(new Date(lastUpdateCheck.last))))
             return
         }
 
@@ -80,7 +80,7 @@ function UpdateCheck() {
                     return
                 }
                 scheduleNextUpdateCheck(true, versionMatch[1])
-                setStatus(locf`update.lastCheck`(new Date().toLocaleString(language)))
+                setStatus(locf`update.lastCheck`(locale.datetime(new Date(lastUpdateCheck.last))))
                 setUpstreamVersion(versionMatch[1])
             },
             onerror() {

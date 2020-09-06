@@ -1,9 +1,9 @@
 // ical.ts: iCal export
 
 import {Activity, Instance} from "./classes"
-import {language, loc, locf} from "./locales"
+import {language, loc, locale, locf} from "./locales"
 import {selectedActivities} from "./activities"
-import {downloadFile} from "./utils"
+import {downloadFile, zeropad} from "./utils"
 
 class IcalProperty {
     key: string
@@ -39,7 +39,7 @@ class IcalProperty {
     }
 
     static date(key: string, value: Date): IcalProperty {
-        const dateStr = `${pad(4, value.getUTCFullYear())}${pad(2, value.getUTCMonth() + 1)}${pad(2, value.getUTCDate())}T${pad(2, value.getUTCHours())}${pad(2, value.getUTCMinutes())}${pad(2, value.getUTCSeconds())}Z`
+        const dateStr = zeropad`${value.getUTCFullYear()}[4]${value.getUTCMonth() + 1}[2]${value.getUTCDate()}[2]T${value.getUTCHours()}[2]${value.getUTCMinutes()}[2]${value.getUTCSeconds()}[2]Z`
         return new IcalProperty(key, dateStr)
     }
 }
@@ -72,11 +72,6 @@ class IcalObject {
             return split
         }).join("\r\n")
     }
-}
-
-/** Zero-pads a number to the given length. */
-function pad(digits: number, num: number) {
-    return num.toString().padStart(digits, "0")
 }
 
 /** Computes an unique ID for an instance for use in iCal. */
@@ -126,9 +121,9 @@ function formatString(instance: Instance, format: string) {
             case "l":
                 return instance.location
             case "s":
-                return instance.start.toLocaleString(language)
+                return locale.datetime(instance.start)
             case "e":
-                return instance.end.toLocaleString(language)
+                return locale.datetime(instance.end)
             case "u":
                 return instance.activity.url
             default:
@@ -144,9 +139,9 @@ function createIcalFromActivities(activities: Iterable<Activity>, format: IcalEx
     calendar.add(IcalProperty.text("PRODID", "-//PurkkaKoodari//Oodi++ ${VERSION}//EN"))
     calendar.add(IcalProperty.text("METHOD", "PUBLISH"))
     calendar.add(IcalProperty.text("NAME", loc`ical.title`))
-    calendar.add(IcalProperty.text("DESCRIPTION", locf`ical.description`(VERSION, new Date().toLocaleString(language))))
+    calendar.add(IcalProperty.text("DESCRIPTION", locf`ical.description`(VERSION, locale.datetime(new Date()))))
     calendar.add(IcalProperty.text("X-WR-CALNAME", loc`ical.title`))
-    calendar.add(IcalProperty.text("X-WR-CALDESC", locf`ical.description`(VERSION, new Date().toLocaleString(language))))
+    calendar.add(IcalProperty.text("X-WR-CALDESC", locf`ical.description`(VERSION, locale.datetime(new Date()))))
     for (const activity of activities) {
         let instanceNo = 0
         for (const instance of activity.instances) {

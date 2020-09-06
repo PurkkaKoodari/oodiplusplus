@@ -64,9 +64,9 @@ function InstanceView({renderInstance, columns, firstHour, onInstanceClick}: Ins
     const tooltip = `\
 ${activity.course.code} ${activity.course.name}
 ${activity.type} ${activity.name}
-${locale.weekdays[renderInstance.weekday]} ${instance.start.toLocaleTimeString(language)}\u2013${instance.end.toLocaleTimeString(language)}\
-${instance.location && `\nLocation: ${instance.location}`}\
-${activity.teachers.length ? `\nTeacher: ${activity.teachers.map(teacher => teacher.name).join(", ")}` : ""}`
+${locale.weekdays[renderInstance.weekday]} ${locale.time(instance.start)}\u2013${locale.time(instance.end)}\
+${instance.location && `\n${loc`schedule.tooltip.location`} ${instance.location}`}\
+${activity.teachers.length ? `\n${loc`schedule.tooltip.teacher`} ${activity.teachers.map(teacher => teacher.name).join(", ")}` : ""}`
     
     return (
         <Tooltip text={tooltip}>
@@ -112,7 +112,7 @@ function WeekView({renderWeek, onInstanceClick}: WeekViewProps) {
         else weekRanges[weekRanges.length - 1].end = week
     }
     // stringify date ranges
-    const dateHeader = weekRanges.map(range => `${range.start.toLocaleDateString(language)}\u2013${new Date(range.end.getTime() + ONE_WEEK - 1).toLocaleDateString(language)}`).join(", ")
+    const dateHeader = weekRanges.map(range => `${locale.date(range.start)}\u2013${locale.date(new Date(range.end.getTime() + ONE_WEEK - 1000))}`).join(", ")
 
     // compute horizontal slots for overlapping instances and first/last hours
     let firstHour = 24

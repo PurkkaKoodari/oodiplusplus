@@ -2,6 +2,8 @@
 
 import $ from "jquery"
 
+import {zeropad} from "./utils"
+
 /** The language code extracted from the page. */
 export const language: string = (() => {
     let langAttr = $("html").attr("lang")!
@@ -34,6 +36,9 @@ function fmt(strings: TemplateStringsArray, ...params: number[]): LocaleFormat {
 
 type Locale = {
     weekdays: string[]
+    date(date: Date): string
+    time(date: Date): string
+    datetime(date: Date): string
     messages: MapObj<LocaleMessage>
 }
 
@@ -41,6 +46,15 @@ type Locale = {
 export const LOCALES: MapObj<Locale> = {
     fi: {
         weekdays: ["ma", "ti", "ke", "to", "pe", "la", "su"],
+        date(date) {
+            return `${date.getDay()}.${date.getMonth() + 1}.${date.getFullYear()}`
+        },
+        time(date) {
+            return zeropad`${date.getHours()}[0].${date.getMinutes()}[2]`
+        },
+        datetime(date) {
+            return `${this.date(date)} ${this.time(date)}`
+        },
         messages: {
             "alert.dataUpdate.available": fmt`${0} aktiviteettia tällä sivulla on muuttunut Oodi++:aan lisäämisen jälkeen. `,
             "alert.dataUpdate.available.differentLang": fmt`${0} niistä on lisätty eri kielellä kuin Oodin nykyinen kieli, mikä voi aiheuttaa tämän. `,
@@ -57,9 +71,11 @@ export const LOCALES: MapObj<Locale> = {
             "schedule.actions.title": "Työkalut:",
             "schedule.actions.remove": "Poista",
             "schedule.actions.exportIcal": "Vie iCal-tiedostoon",
+            "schedule.dataUpdate.required": "Tämän aktiviteetin data on vanhentuneessa muodossa. Käy sen kurssisivulla päivittääksesi sen.",
             "schedule.empty.allInPast": "Kaikki valitut aktiviteetit ovat menneisyydessä. Valitse lisää aktiviteetteja näyttääksesi lukujärjestyksen.",
             "schedule.empty.noSelection": "Valitse aktiviteetteja Oodista näyttääksesi lukujärjestyksen.",
-            "schedule.dataUpdate.required": "Tämän aktiviteetin data on vanhentuneessa muodossa. Käy sen kurssisivulla päivittääksesi sen.",
+            "schedule.tooltip.location": "Sijainti:",
+            "schedule.tooltip.teacher": "Opettaja:",
             "settings.appUpdated": fmt`Oodi++ on päivitetty versioon ${0}. Tässä uudet ominaisuudet.`,
             "settings.export.file": "Vie data tiedostoon",
             "settings.export.text": "Vie data tekstinä",
@@ -102,10 +118,28 @@ Käytä näitä symboleja iCal-tapahtumien muotoiluun:
     },
     sv: {
         weekdays: ["må", "ti", "on", "to", "fr", "lö", "sö"],
+        date(date) {
+            return zeropad`${date.getFullYear()}[4]-${date.getMonth() + 1}[2]-${date.getDay()}[2]`
+        },
+        time(date) {
+            return zeropad`${date.getHours()}[0]:${date.getMinutes()}[2]`
+        },
+        datetime(date) {
+            return `${this.date(date)} ${this.time(date)}`
+        },
         messages: {},
     },
     en: {
         weekdays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+        date(date) {
+            return zeropad`${date.getFullYear()}[4]-${date.getMonth() + 1}[2]-${date.getDay()}[2]`
+        },
+        time(date) {
+            return zeropad`${date.getHours()}[0]:${date.getMinutes()}[2]`
+        },
+        datetime(date) {
+            return `${this.date(date)} ${this.time(date)}`
+        },
         messages: {
             "alert.dataUpdate.available": fmt`${0} activities on this page have changed since they were added to Oodi++. `,
             "alert.dataUpdate.available.differentLang": fmt`${0} of them were added in a language other than Oodi's current language, which may cause this. `,
@@ -122,9 +156,11 @@ Käytä näitä symboleja iCal-tapahtumien muotoiluun:
             "schedule.actions.title": "Schedule tools:",
             "schedule.actions.remove": "Remove",
             "schedule.actions.exportIcal": "Export iCal",
+            "schedule.dataUpdate.required": "This activity's data is in an outdated format. Visit its course page to update it.",
             "schedule.empty.allInPast": "All currently selected activities are in the past. Select more activities from Oodi to display a schedule.",
             "schedule.empty.noSelection": "Select activities from Oodi to display a schedule.",
-            "schedule.dataUpdate.required": "This activity's data is in an outdated format. Visit its course page to update it.",
+            "schedule.tooltip.location": "Location:",
+            "schedule.tooltip.teacher": "Teacher:",
             "settings.appUpdated": fmt`Oodi++ was updated to version ${0}. Here's what's new.`,
             "settings.export.file": "Export data to file",
             "settings.export.text": "Export data as text",

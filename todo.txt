@@ -3,8 +3,6 @@ TODO:
 - resizable schedule view
 - (automatically?) prune activities in past
 - add coloring of activities
-- configurable exported event titles
-- collect and export teacher information
 - location database
 - ensure dst handling works when adding getTime()s
 - add image gallery to README when the ui is nicer
