@@ -3,5 +3,4 @@ TODO:
 - resizable schedule view
 - add coloring of activities
 - location database
-- ensure dst handling works when adding getTime()s
 - add image gallery to README when the ui is nicer

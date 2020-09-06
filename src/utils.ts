@@ -32,7 +32,6 @@ export function downloadFile(contents: string, fileName: string, mimeType: strin
 export const ONE_MINUTE = 60 * 1000
 export const ONE_HOUR = 60 * ONE_MINUTE
 export const ONE_DAY = 24 * ONE_HOUR
-export const ONE_WEEK = 7 * ONE_DAY
 
 /** Converts a Date.getDay() value to the corresponding index where 0 = Monday. */
 export const finnishWeekday = (dateDay: number) => (dateDay + 6) % 7
@@ -45,7 +44,7 @@ export const timeOfDay = (date: Date) => (date.getTime() - date.getTimezoneOffse
 /** The start of the current week's Monday at the time of page load. */
 export const thisMonday = new Date()
 thisMonday.setTime(thisMonday.getTime() - timeOfDay(thisMonday))
-while (thisMonday.getDay() != 1) thisMonday.setTime(thisMonday.getTime() - ONE_DAY)
+while (thisMonday.getDay() != 1) thisMonday.setDate(thisMonday.getDate() + 1)
 
 
 

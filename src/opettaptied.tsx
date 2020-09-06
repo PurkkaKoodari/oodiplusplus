@@ -6,7 +6,7 @@ import $ from "jquery"
 import {Activity, Course, Instance, Teacher} from "./classes"
 import {requestSidebarFocus} from "./sidebar"
 import {COURSE_INFO_KEYS, language, loc, locf} from "./locales"
-import {ONE_DAY, ONE_WEEK, useObservable} from "./utils"
+import {useObservable} from "./utils"
 import {deselectActivity, getExistingSelectedActivity, selectActivity, selectedActivities, hoveredActivity, unhoverActivity, hoverActivity} from "./activities"
 
 /** Parsed activities from opettaptied.jsp. */
@@ -90,13 +90,13 @@ export const opettaptiedActivities = (() => {
                 const firstDate = new Date(+(year1 || year2) + 2000, +month1 - 1, +day1, +hour1, +minute1)
                 const lastDate = day2 ? new Date(+year2 + 2000, +month2 - 1, +day2, +hour1, +minute1) : firstDate
                 // iterate over all instances in the range
-                for (const currDate = new Date(firstDate); currDate.getTime() <= lastDate.getTime(); currDate.setTime(currDate.getTime() + ONE_WEEK)) {
+                for (const currDate = new Date(firstDate); currDate <= lastDate; currDate.setDate(currDate.getDate() + 7)) {
                     const start = new Date(currDate)
                     const end = new Date(currDate)
                     end.setHours(+hour2)
                     end.setMinutes(+minute2)
                     // handle potential day rollover (badly)
-                    if (end.getTime() < start.getTime()) end.setTime(end.getTime() + ONE_DAY)
+                    if (end < start) end.setDate(end.getDate() + 1)
                     // add the instances to the parsed activity, but make them refer to the actual one - parsedActivity is just a dumb container
                     parsedActivity.instances.push(new Instance(activity, start, end, location))
                 }

@@ -4,7 +4,7 @@ import {h, Fragment} from "preact"
 import {useEffect, useState} from "preact/hooks"
 
 import {Instance} from "./classes"
-import {thisMonday, ONE_WEEK, ONE_HOUR, finnishWeekday, timeOfDay, range, useObservable} from "./utils"
+import {thisMonday, ONE_HOUR, finnishWeekday, timeOfDay, range, useObservable} from "./utils"
 import {loc, locale, locf, language} from "./locales"
 import {OpettaptiedUpdateableNotification} from "./opettaptied"
 import {exportSelectedActivitiesAsIcal} from "./ical"
@@ -108,11 +108,17 @@ function WeekView({renderWeek, onInstanceClick}: WeekViewProps) {
     // transform list of weeks into list of ranges
     const weekRanges = [{start: renderWeek.weeks[0], end: renderWeek.weeks[0]}]
     for (const week of renderWeek.weeks.slice(1)) {
-        if (week.getTime() !== weekRanges[weekRanges.length - 1].end.getTime() + ONE_WEEK) weekRanges.push({start: week, end: week})
-        else weekRanges[weekRanges.length - 1].end = week
+        const expectedEndToContinue = new Date(weekRanges[weekRanges.length - 1].end)
+        expectedEndToContinue.setDate(expectedEndToContinue.getDate() + 7)
+        if (week.getTime() === expectedEndToContinue.getTime()) weekRanges[weekRanges.length - 1].end = week
+        else weekRanges.push({start: week, end: week})
     }
     // stringify date ranges
-    const dateHeader = weekRanges.map(range => `${locale.date(range.start)}\u2013${locale.date(new Date(range.end.getTime() + ONE_WEEK - 1000))}`).join(", ")
+    const dateHeader = weekRanges.map(range => {
+        const lastSunday = new Date(range.end)
+        lastSunday.setDate(lastSunday.getDate() + 6)
+        return `${locale.date(range.start)}\u2013${locale.date(lastSunday)}`
+    }).join(", ")
 
     // compute horizontal slots for overlapping instances and first/last hours
     let firstHour = 24
@@ -292,7 +298,7 @@ export function ScheduleView({sidebarOpen}: {sidebarOpen: boolean}) {
     })
 
     // skip weeks that already started
-    while (allInstances.length > 0 && allInstances[0].start.getTime() <= thisMonday.getTime()) allInstances.shift()
+    while (allInstances.length > 0 && allInstances[0].start <= thisMonday) allInstances.shift()
 
     if (allInstances.length === 0) {
         return (
@@ -306,10 +312,11 @@ export function ScheduleView({sidebarOpen}: {sidebarOpen: boolean}) {
     while (allInstances.length > 0) {
         // find instances during this week and compile a "week contents" string from it
         const weekStart = new Date(currentWeek)
-        const weekEnd = new Date(currentWeek.getTime() + ONE_WEEK)
+        const weekEnd = new Date(currentWeek)
+        weekEnd.setDate(weekStart.getDate() + 7)
         const weekInstances = []
         let weekContents = ""
-        while (allInstances.length > 0 && allInstances[0].start.getTime() < weekEnd.getTime()) {
+        while (allInstances.length > 0 && allInstances[0].start < weekEnd) {
             const instance = allInstances.shift()!
             weekInstances.push(instance)
             weekContents += `${instance.activity.identifier} ${instance.start.getDay()} ${timeOfDay(instance.start)} ${timeOfDay(instance.end)}\n`
@@ -320,7 +327,7 @@ export function ScheduleView({sidebarOpen}: {sidebarOpen: boolean}) {
             weekContentIndex.get(weekContents)!.weeks.push(new Date(weekStart))
         }
         // advance to next week
-        currentWeek.setTime(currentWeek.getTime() + ONE_WEEK)
+        currentWeek.setDate(currentWeek.getDate() + 7)
     }
 
     // sort schedules by first week

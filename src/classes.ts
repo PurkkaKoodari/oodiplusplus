@@ -126,7 +126,7 @@ export class Activity {
 
     /** Checks whether or not all instances of this activity are in the past. */
     get inPast() {
-        return this.instances.every(instance => instance.start.getTime() < thisMonday.getTime())
+        return this.instances.every(instance => instance.start < thisMonday)
     }
 
     /** Gets the URL to the activity's course page. */
