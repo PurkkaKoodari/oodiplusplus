@@ -43,6 +43,7 @@ export const LOCALES: MapObj<Locale> = {
         weekdays: ["ma", "ti", "ke", "to", "pe", "la", "su"],
         messages: {
             "alert.dataUpdate.available": fmt`${0} aktiviteettia tällä sivulla on muuttunut Oodi++:aan lisäämisen jälkeen. `,
+            "alert.dataUpdate.available.differentLang": fmt`${0} niistä on lisätty eri kielellä kuin Oodin nykyinen kieli, mikä voi aiheuttaa tämän. `,
             "alert.dataUpdate.required": fmt`${0} aktiviteetin data on vanhassa muodossa. Käy niiden kurssisivuilla päivittääksesi ne.`,
             "alert.dataUpdate.updateAll": "Päivitä kaikki",
             "appTitle": fmt`Oodi++ ${0}`,
@@ -107,6 +108,7 @@ Käytä näitä symboleja iCal-tapahtumien muotoiluun:
         weekdays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
         messages: {
             "alert.dataUpdate.available": fmt`${0} activities on this page have changed since they were added to Oodi++. `,
+            "alert.dataUpdate.available.differentLang": fmt`${0} of them were added in a language other than Oodi's current language, which may cause this. `,
             "alert.dataUpdate.required": fmt`${0} activities are using an outdated data format. Visit their course pages to update them.`,
             "alert.dataUpdate.updateAll": "Update all",
             "appTitle": fmt`Oodi++ ${0}`,

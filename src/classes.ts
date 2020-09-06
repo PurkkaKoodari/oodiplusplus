@@ -4,7 +4,7 @@ import {selectedActivities} from "./activities"
 import {thisMonday} from "./utils"
 
 /** Compared to Activity.dataVersion to see which activities need an update. */
-const CURRENT_DATA_VERSION = 1
+const CURRENT_DATA_VERSION = 2
 
 export type SerializedCourse = {
     code: string
@@ -40,11 +40,39 @@ export class Course {
     }
 }
 
+type SerializedTeacher = Teacher
+
+export class Teacher {
+    /** The teacher's full name. */
+    name: string
+    /** The teacher's email address. */
+    email: string
+
+    constructor(name: string, email: string) {
+        this.name = name
+        this.email = email
+    }
+
+    /** Serializes this activity to a JSON-compatible object. *//** Deserializes an activity from the form outputted by serialize(). */
+    serialize(): SerializedTeacher {
+        return this
+    }
+
+    /** Deserializes an activity from the form outputted by serialize(). */
+    static deserialize({name, email}: SerializedTeacher) {
+        if (typeof name !== "string") throw new Error("invalid teacher name")
+        if (typeof email !== "string") throw new Error("invalid teacher email")
+        return new Teacher(name, email)
+    }
+}
+
 export type SerializedActivity = {
     course: SerializedCourse
     type: string
     name: string
     opetTapId: string
+    language: string
+    teachers: SerializedTeacher[]
     lastUpdate: string
     dataVersion: number
     instances: SerializedInstance[]
@@ -60,6 +88,10 @@ export class Activity {
     name: string
     /** The id of the course, found in the opettaptied.jsp URL as OpetTap. */
     opetTapId: string
+    /** The language used when this activity was imported. */
+    language: string
+    /** The names and email addresses of the teachers for this activity. */
+    teachers: Teacher[]
     /** The latest moment the activity was updated. */
     lastUpdate: Date
     /** The latest version of data imported into the activity. */
@@ -71,11 +103,13 @@ export class Activity {
     /** A function to call to update the HTML injected into opettaptied.js with this activity's data. */
     updateOpettaptied: () => void = () => {}
 
-    constructor(course: Course, type: string, name: string, opetTapId: string, lastUpdate: Date, dataVersion: number = CURRENT_DATA_VERSION) {
+    constructor(course: Course, type: string, name: string, opetTapId: string, language: string, teachers: Teacher[], lastUpdate: Date, dataVersion: number = CURRENT_DATA_VERSION) {
         this.course = course
         this.type = type
         this.name = name
         this.opetTapId = opetTapId
+        this.language = language
+        this.teachers = teachers
         this.lastUpdate = lastUpdate
         this.dataVersion = dataVersion
     }
@@ -105,25 +139,34 @@ export class Activity {
         return this.dataVersion < CURRENT_DATA_VERSION
     }
 
+    /** Checks whether or not this activity can be updated on the current page. */
+    get canUpdate() {
+        return this.updatedActivity !== null
+    }
+
     /** Updates this activity from the parsed activity. */
     update() {
         if (!this.updatedActivity) throw new Error("nothing to update")
         this.course = this.updatedActivity.course
         this.type = this.updatedActivity.type
         this.opetTapId = this.updatedActivity.opetTapId
+        this.language = this.updatedActivity.language
+        this.teachers = this.updatedActivity.teachers
         this.instances = this.updatedActivity.instances
         this.dataVersion = CURRENT_DATA_VERSION
         this.lastUpdate = this.updatedActivity.lastUpdate
         this.updatedActivity = null
     }
 
-    /** Serializes this activity to a JSON-compatible object. */
+    /** Serializes this activity to a JSON-compatible object. *//** Deserializes an activity from the form outputted by serialize(). */
     serialize(): SerializedActivity {
         return {
             course: this.course.serialize(),
             type: this.type,
             name: this.name,
             opetTapId: this.opetTapId,
+            language: this.language,
+            teachers: this.teachers.map(teacher => teacher.serialize()),
             dataVersion: this.dataVersion,
             lastUpdate: this.lastUpdate.toISOString(),
             instances: this.instances.map(instance => instance.serialize()),
@@ -131,7 +174,7 @@ export class Activity {
     }
 
     /** Deserializes an activity from the form outputted by serialize(). */
-    static deserialize({course, type, name, opetTapId, lastUpdate, dataVersion, instances}: SerializedActivity) {
+    static deserialize({course, type, name, opetTapId, language, teachers, lastUpdate, dataVersion, instances}: SerializedActivity) {
         const courseObj = Course.deserialize(course)
 
         if (typeof type !== "string") throw new Error("invalid activity type")
@@ -141,8 +184,12 @@ export class Activity {
         if (isNaN(lastUpdateDate.getTime())) throw new Error("invalid activity lastUpdate")
         const dataVersionNum = dataVersion || 0
         if (typeof dataVersionNum !== "number") throw new Error("invalid activity dataVersion")
+        const languageStr = language || ""
+        if (typeof languageStr !== "string") throw new Error("invalid language")
+        const teachersArr = teachers ? teachers.map(serializedTeacher => Teacher.deserialize(serializedTeacher)) : []
+        if (!Array.isArray(teachersArr)) throw new Error("invalid activity teachers")
 
-        const activity = new Activity(courseObj, type, name, opetTapId, lastUpdateDate, dataVersionNum)
+        const activity = new Activity(courseObj, type, name, opetTapId, languageStr, teachersArr, lastUpdateDate, dataVersionNum)
         activity.instances = instances.map(serializedInstance => Instance.deserialize(activity, serializedInstance))
         return activity
     }

@@ -27,13 +27,11 @@ export function getExistingSelectedActivity(parsed: Activity): Activity {
 export function selectActivity(activity: Activity): void {
     if (selectedActivities.value.some(selected => selected.identifier === activity.identifier)) throw new Error(`activity ${activity} is already selected`)
     selectedActivities.value = [...selectedActivities.value, activity]
-    selectedActivities.changed()
 }
 
 /** Deselects an activity. */
 export function deselectActivity(activity: Activity): void {
     selectedActivities.value = selectedActivities.value.filter(selected => selected.identifier !== activity.identifier)
-    selectedActivities.changed()
 }
 
 /** The currently selected activities. */

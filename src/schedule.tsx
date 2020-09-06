@@ -64,14 +64,16 @@ function InstanceView({renderInstance, columns, firstHour, onInstanceClick}: Ins
     const tooltip = `\
 ${activity.course.code} ${activity.course.name}
 ${activity.type} ${activity.name}
-${locale.weekdays[renderInstance.weekday]} ${instance.start.toLocaleTimeString(language)}\u2013${instance.end.toLocaleTimeString(language)}
-${instance.location}`
+${locale.weekdays[renderInstance.weekday]} ${instance.start.toLocaleTimeString(language)}\u2013${instance.end.toLocaleTimeString(language)}\
+${instance.location && `\nLocation: ${instance.location}`}\
+${activity.teachers.length ? `\nTeacher: ${activity.teachers.map(teacher => teacher.name).join(", ")}` : ""}`
     
     return (
         <Tooltip text={tooltip}>
             {({onMouseEnter, onMouseLeave}) =>
                 <div
                         className={`opp-activity ${hovered === activity ? "opp-hovered" : ""}`}
+                        lang={activity.language || language}
                         style={{
                             left: `${20 + 100 * renderInstance.weekday + 100 / columns[renderInstance.weekday] * renderInstance.columns!.start}px`,
                             top: `${20 + 60 * (renderInstance.start / ONE_HOUR - firstHour)}px`,

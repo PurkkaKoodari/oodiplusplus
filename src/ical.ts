@@ -5,40 +5,61 @@ import {language, loc, locf} from "./locales"
 import {selectedActivities} from "./activities"
 import {downloadFile} from "./utils"
 
-class IcalObject {
-    type: string
-    children: string[] = []
+class IcalProperty {
+    key: string
+    value: string
+    props: Map<string, string> = new Map()
 
-    constructor(type: string) {
-        this.type = type
+    constructor(key: string, value: string) {
+        this.key = key
+        this.value = value
     }
 
-    /** Adds a text property to this object. */
-    addText(key: string, value: string, addEmpty: boolean = false) {
-        if (value === "" && !addEmpty) return
+    param(key: string, value: string): this {
+        this.props.set(key, value)
+        return this
+    }
+
+    toString() {
+        let result = `${this.key}`
+        for (const [key, value] of this.props) result += `;${key}="${value}"`
+        result += `:${this.value}`
+        return result
+    }
+
+    static text(key: string, value: string, addEmpty: boolean = false): IcalProperty | null {
+        if (value === "" && !addEmpty) return null
         const escaped = value
                 .replace(/\\/g, "\\\\") // escape backslashes
                 .replace(/\r?\n/g, "\\n") // escape newlines
                 .replace(/[,;]/g, "\\$&") // escape , and ;
                 .replace(/\s+/g, " ") // normalize whitespace to single spaces
                 .replace(/[\x00-\x1f\x7f]/g, "") // remove other control chars
-        this.children.push(`${key}:${escaped}`)
+        return new IcalProperty(key, escaped)
     }
 
-    /** Adds a date property to this object. */
-    addDate(key: string, value: Date) {
+    static date(key: string, value: Date): IcalProperty {
         const dateStr = `${pad(4, value.getUTCFullYear())}${pad(2, value.getUTCMonth() + 1)}${pad(2, value.getUTCDate())}T${pad(2, value.getUTCHours())}${pad(2, value.getUTCMinutes())}${pad(2, value.getUTCSeconds())}Z`
-        this.children.push(`${key}:${dateStr}`)
+        return new IcalProperty(key, dateStr)
+    }
+}
+
+class IcalObject {
+    type: string
+    children: (IcalObject | IcalProperty)[] = []
+
+    constructor(type: string) {
+        this.type = type
     }
 
     /** Adds a child object to this object. */
-    add(child: IcalObject) {
-        this.children.push(child.toString())
+    add(child: IcalObject | IcalProperty | null) {
+        if (child !== null) this.children.push(child)
     }
 
     /** Converts this object to a iCal format compliant string. */
     toString(): string {
-        const raw = `BEGIN:${this.type}\n${this.children.map(child => child + "\n").join("")}END:${this.type}`
+        const raw = `BEGIN:${this.type}\n${this.children.map(child => child.toString() + "\n").join("")}END:${this.type}`
         // limit lines to 75 octets
         const lines = raw.split(/\r?\n/g)
         return lines.flatMap(line => {
@@ -119,27 +140,28 @@ function formatString(instance: Instance, format: string) {
 /** Generates an iCal file from the given activities. */
 function createIcalFromActivities(activities: Iterable<Activity>, format: IcalExportFormatStrings) {
     const calendar = new IcalObject("VCALENDAR")
-    calendar.addText("VERSION", "2.0")
-    calendar.addText("PRODID", "-//PurkkaKoodari//Oodi++ ${VERSION}//EN")
-    calendar.addText("METHOD", "PUBLISH")
-    calendar.addText("NAME", loc`ical.title`)
-    calendar.addText("DESCRIPTION", locf`ical.description`(VERSION, new Date().toLocaleString(language)))
-    calendar.addText("X-WR-CALNAME", loc`ical.title`)
-    calendar.addText("X-WR-CALDESC", locf`ical.description`(VERSION, new Date().toLocaleString(language)))
+    calendar.add(IcalProperty.text("VERSION", "2.0"))
+    calendar.add(IcalProperty.text("PRODID", "-//PurkkaKoodari//Oodi++ ${VERSION}//EN"))
+    calendar.add(IcalProperty.text("METHOD", "PUBLISH"))
+    calendar.add(IcalProperty.text("NAME", loc`ical.title`))
+    calendar.add(IcalProperty.text("DESCRIPTION", locf`ical.description`(VERSION, new Date().toLocaleString(language))))
+    calendar.add(IcalProperty.text("X-WR-CALNAME", loc`ical.title`))
+    calendar.add(IcalProperty.text("X-WR-CALDESC", locf`ical.description`(VERSION, new Date().toLocaleString(language))))
     for (const activity of activities) {
         let instanceNo = 0
         for (const instance of activity.instances) {
             const event = new IcalObject("VEVENT")
-            event.addText("UID", instanceUid(instance, instanceNo))
-            event.addDate("DTSTAMP", activity.lastUpdate)
-            event.addDate("DTSTART", instance.start)
-            event.addDate("DTEND", instance.end)
-            event.addText("SUMMARY", formatString(instance, format.title))
-            event.addText("DESCRIPTION", formatString(instance, format.description))
-            event.addText("LOCATION", instance.location)
-            event.addText("CATEGORIES", `${activity.course.code} ${activity.course.name}`)
-            event.addText("CATEGORIES", activity.type)
-            event.addText("URL", activity.url)
+            event.add(IcalProperty.text("UID", instanceUid(instance, instanceNo)))
+            event.add(IcalProperty.date("DTSTAMP", activity.lastUpdate))
+            event.add(IcalProperty.date("DTSTART", instance.start))
+            event.add(IcalProperty.date("DTEND", instance.end))
+            event.add(IcalProperty.text("SUMMARY", formatString(instance, format.title)))
+            event.add(IcalProperty.text("DESCRIPTION", formatString(instance, format.description)))
+            event.add(IcalProperty.text("LOCATION", instance.location))
+            event.add(IcalProperty.text("CATEGORIES", `${activity.course.code} ${activity.course.name}`))
+            event.add(IcalProperty.text("CATEGORIES", activity.type))
+            for (const teacher of activity.teachers) event.add(new IcalProperty("ATTENDEE", `mailto:${teacher.email}`).param("CN", teacher.name))
+            event.add(IcalProperty.text("URL", activity.url))
             calendar.add(event)
         }
     }

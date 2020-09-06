@@ -78,10 +78,6 @@ export class Observable<T> {
 
     set value(value: T) {
         this.current = value
-        this.changed()
-    }
-
-    changed() {
         for (const listener of this.listeners) listener(this.current)
     }
 

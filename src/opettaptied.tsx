@@ -3,9 +3,9 @@
 import {h} from "preact"
 import $ from "jquery"
 
-import {Activity, Course, Instance} from "./classes"
+import {Activity, Course, Instance, Teacher} from "./classes"
 import {requestSidebarFocus} from "./sidebar"
-import {COURSE_INFO_KEYS, loc, locf} from "./locales"
+import {COURSE_INFO_KEYS, language, loc, locf} from "./locales"
 import {ONE_DAY, ONE_WEEK, useObservable} from "./utils"
 import {deselectActivity, getExistingSelectedActivity, selectActivity, selectedActivities, hoveredActivity, unhoverActivity, hoverActivity} from "./activities"
 
@@ -59,13 +59,21 @@ export const opettaptiedActivities = (() => {
                 .children("tr") // all rows
                 .each(function () {
 
-            // activity name, such as 
+            // activity name, such as L01
             const activityName = $(this).children("td:nth-child(1)").text().trim() // text of first cell of this row
             // if we can't find a name, we can't do much
             if (!activityName) return
 
+            // parse teachers
+            const teachers = $(this).children("td:nth-child(2)").find("a[href]").toArray().flatMap(link => {
+                const teacherName = $(link).text().trim()
+                const emailMatch = /\s*mailto:\s*(?:[^<>@\s]+<)?([^\s<>@]+@[^\s<>@]+)>?/.exec($(link).attr("href")!)
+                if (!emailMatch) return []
+                return new Teacher(teacherName, emailMatch[1])
+            })
+
             // reuse activity from selectedActivities if one exists
-            const parsedActivity = new Activity(course, activityType, activityName, opetTapId, new Date())
+            const parsedActivity = new Activity(course, activityType, activityName, opetTapId, language, teachers, new Date())
             const activity = getExistingSelectedActivity(parsedActivity)
 
             // walk all date/time/location specifiers for this activity
@@ -136,7 +144,7 @@ export const opettaptiedActivities = (() => {
                     .text(loc`opettaptied.dataUpdate`)
                     .click(() => {
                 activity.update()
-                selectedActivities.changed()
+                selectedActivities.value = [...selectedActivities.value]
             })
 
             // method to update the stuff added to this page
@@ -148,7 +156,7 @@ export const opettaptiedActivities = (() => {
                         .prop("disabled", activity.inPast && !activity.selected)
                         .text(activity.selected ? loc`opettaptied.remove` : loc`opettaptied.add`)
                 // show update button if necessary
-                $updateButton.toggle(activity.updatedActivity !== null && !activity.inPast)
+                $updateButton.toggle(activity.canUpdate && !activity.inPast)
             }
             activity.updateOpettaptied()
 
@@ -193,16 +201,19 @@ export function OpettaptiedUpdateableNotification() {
     const updateable = updateableOnThisPage()
     if (!updateable) return null
 
+    const differentLang = opettaptiedActivities.filter(activity => activity.canUpdate && activity.language && activity.language !== language).length
+
     function updateAllActivities() {
         for (const activity of opettaptiedActivities) {
-            if (activity.updatedActivity !== null) activity.update()
+            if (activity.canUpdate) activity.update()
         }
-        selectedActivities.changed()
+        selectedActivities.value = [...selectedActivities.value]
     }
 
     return (
         <p className="opp-alert-text">
             {locf`alert.dataUpdate.available`(updateable)}
+            {differentLang ? locf`alert.dataUpdate.available.differentLang`(differentLang) : null}
             <button type="button" onClick={updateAllActivities}>{loc`alert.dataUpdate.updateAll`}</button>
         </p>
     )
@@ -210,5 +221,5 @@ export function OpettaptiedUpdateableNotification() {
 
 /** Gets the number of activities with outdated data that can be updated on this opettaptied.jsp page. */
 export function updateableOnThisPage() {
-    return opettaptiedActivities.filter(activity => activity.updatedActivity !== null).length
+    return opettaptiedActivities.filter(activity => activity.canUpdate).length
 }
