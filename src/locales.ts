@@ -47,7 +47,7 @@ export const LOCALES: MapObj<Locale> = {
     fi: {
         weekdays: ["ma", "ti", "ke", "to", "pe", "la", "su"],
         date(date) {
-            return `${date.getDay()}.${date.getMonth() + 1}.${date.getFullYear()}`
+            return `${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()}`
         },
         time(date) {
             return zeropad`${date.getHours()}[0].${date.getMinutes()}[2]`
@@ -122,7 +122,7 @@ Käytä näitä symboleja iCal-tapahtumien muotoiluun:
     sv: {
         weekdays: ["må", "ti", "on", "to", "fr", "lö", "sö"],
         date(date) {
-            return zeropad`${date.getFullYear()}[4]-${date.getMonth() + 1}[2]-${date.getDay()}[2]`
+            return zeropad`${date.getFullYear()}[4]-${date.getMonth() + 1}[2]-${date.getDate()}[2]`
         },
         time(date) {
             return zeropad`${date.getHours()}[0]:${date.getMinutes()}[2]`
@@ -135,7 +135,7 @@ Käytä näitä symboleja iCal-tapahtumien muotoiluun:
     en: {
         weekdays: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
         date(date) {
-            return zeropad`${date.getFullYear()}[4]-${date.getMonth() + 1}[2]-${date.getDay()}[2]`
+            return zeropad`${date.getFullYear()}[4]-${date.getMonth() + 1}[2]-${date.getDate()}[2]`
         },
         time(date) {
             return zeropad`${date.getHours()}[0]:${date.getMinutes()}[2]`
