@@ -35,6 +35,8 @@ module.exports = {
         }),
         new webpack.DefinePlugin({
             VERSION: JSON.stringify(scriptVersion),
+            PREACT_VERSION: JSON.stringify(preactVersion),
+            JQUERY_VERSION: JSON.stringify(jqueryVersion),
         }),
         new webpack.BannerPlugin({
             banner({chunk}) {
@@ -68,6 +70,7 @@ module.exports = {
 // @grant        GM_addStyle
 ${update}// ==/UserScript==
 
+/*! Oodi++ is licensed under the MIT license. */
 /*! Includes jQuery v${jqueryVersion} | (c) JS Foundation and other contributors | jquery.org/license */
 /*! Includes Preact v${preactVersion} | https://preactjs.com/ | MIT License */
 

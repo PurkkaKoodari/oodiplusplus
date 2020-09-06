@@ -39,6 +39,26 @@ const CHANGELOG = [
     },
 ]
 
+const COMMITS_URL = `https://gitlab.com/PurkkaKoodari/oodiplusplus/-/commits/v${VERSION}`
+const WEBSITE_URL = "https://purkka.codes/oodi/"
+
+function About() {
+    return (
+        <div className="opp-about">
+            <p>
+                <a href={WEBSITE_URL} target="_blank">Oodi++</a> is created by <a href="https://purkka.codes/" target="_blank">PurkkaKoodari</a> and
+                is licensed under the <a href={`${WEBSITE_URL}LICENSE`} target="_blank">MIT license</a>.
+            </p>
+            <p>
+                Oodi++ contains code from <a href="https://preactjs.com" target="_blank">Preact {PREACT_VERSION}</a>, licensed
+                under the <a href="https://github.com/preactjs/preact/blob/master/LICENSE" target="_blank">MIT license</a>,
+                and <a href="https://jquery.com/" target="_blank">jQuery {JQUERY_VERSION}</a>, licensed under
+                the <a href="https://jquery.org/license/" target="_blank">MIT license.</a>
+            </p>
+        </div>
+    )
+}
+
 function ReleaseNotes() {
     const whatsNew = unseenReleaseNotes ? (
         <p class="opp-success-text">
@@ -49,6 +69,7 @@ function ReleaseNotes() {
     return (
         <div className="opp-release-notes">
             {whatsNew}
+            <p>For a full list of changes, see <a href={COMMITS_URL} target="_blank">the commit history</a>.</p>
             {CHANGELOG.flatMap(({version, changes}) => [
                 <h4 key={`title${version}`}>version {version}</h4>,
                 <ul key={`list${version}`}>
@@ -221,6 +242,12 @@ export function SidebarHeader({sidebarOpen}: {sidebarOpen: boolean}) {
                 <h2>{locf`appTitle`(VERSION)}</h2>
                 <button
                         type="button"
+                        className={visiblePart === "about" ? "opp-active" : ""}
+                        onClick={changeVisibleHeaderPart("about")}>
+                    {loc`settings.about`}
+                </button>
+                <button
+                        type="button"
                         className={visiblePart === "release-notes" ? "opp-active" : ""}
                         onClick={changeVisibleHeaderPart("release-notes")}>
                     {loc`settings.releaseNotes`}
@@ -234,6 +261,9 @@ export function SidebarHeader({sidebarOpen}: {sidebarOpen: boolean}) {
             </div>
             <UpdateCheckComponent />
             
+            <SettingsContainer open={visiblePart === "about"}>
+                <About />
+            </SettingsContainer>
             <SettingsContainer open={visiblePart === "release-notes"}>
                 <ReleaseNotes />
             </SettingsContainer>

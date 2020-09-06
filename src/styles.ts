@@ -280,7 +280,7 @@ body.opp-sidebar-open .opp-sidebar-wrapper {
 .opp-settings-wrapper.opp-open {
     height: auto;
 }
-.opp-release-notes, .opp-settings {
+.opp-about, .opp-release-notes, .opp-settings {
     padding: 0 10px;
     margin-bottom: 10px;
     background: ${theme.settingsBackground};
