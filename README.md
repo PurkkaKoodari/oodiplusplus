@@ -31,6 +31,7 @@ niiden minifioidut lähdekoodit, kyseiset tiedostot ovat [preact.module.js], [ho
 Alkuperäinen lähdekoodi on saatavilla [GitLabissa][gitlab] MIT-lisenssillä. Se käyttää buildaukseen Webpackia ja TypeScriptiä,
 mutta konfiguraation tavoitteena on maksimoida lopputuloksen luettavuus.
 
+Vakaa versio löytyy branchista `stable`. Branchissa `master` on uusin kehitysversio, joka saattaa olla epävakaa.
 Buildataksesi userscriptit suorita komennot `npm install` ja `make` (vaatii normaalin *nix-ympäristön sekä suhteellisen tuoreen Node.js:n).
 
 [userscript]: https://en.wikipedia.org/wiki/Userscript

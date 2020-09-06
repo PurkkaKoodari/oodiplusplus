@@ -30,6 +30,7 @@ source code, the files are [preact.module.js], [hooks.module.js] ja [jquery.slim
 The original source code is available on [GitLab][gitlab] under the MIT license. The build process uses Webpack and TypeScript,
 but the configuration intends to maximize the readability of the result.
 
+The stable release is in the `stable` branch, while `master` contains the latest development version and may be unstable.
 To build the userscripts just run `npm install` and `make` (requires a normal *nix environment and a relatively fresh Node.js).
 
 [userscript]: https://en.wikipedia.org/wiki/Userscript
