@@ -1,7 +1,7 @@
 // ical.ts: iCal export
 
 import {Activity, Instance} from "./classes"
-import {language, loc, locale, locf} from "./locales"
+import {loc, locale, locf} from "./locales"
 import {selectedActivities} from "./activities"
 import {downloadFile, Observable, zeropad} from "./utils"
 

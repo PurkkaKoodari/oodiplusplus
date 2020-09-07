@@ -84,4 +84,7 @@ ${update}// ==/UserScript==
         filename: "./oodiplusplus.[name].user.js",
         path: path.resolve(__dirname),
     },
+    stats: {
+        maxModules: 100,
+    },
 }

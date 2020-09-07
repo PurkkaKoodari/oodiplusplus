@@ -1,10 +1,10 @@
-// updatecheck.ts
+// updatecheck.tsx: auto update check code
 
 import {h, Fragment} from "preact"
 import {useState, useEffect} from "preact/hooks"
 
 import {requestSidebarFocus} from "./sidebar"
-import {language, loc, locale, locf} from "./locales"
+import {loc, locale, locf} from "./locales"
 import {setUpdateCheckComponent} from "./settings"
 
 /** URL of the built script upstream. */
@@ -107,7 +107,7 @@ function UpdateCheck() {
 
     return (
         <>
-            <div class="opp-update-check">
+            <div className="opp-update-check">
                 <div>{status}</div>
                 <button type="button" onClick={() => setForcedCheck({})}>
                     {loc`update.check`}

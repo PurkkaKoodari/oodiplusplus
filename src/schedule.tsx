@@ -1,4 +1,4 @@
-// schedule.ts: schedule storage and rendering
+// schedule.tsx: schedule storage and rendering
 
 import {h, Fragment} from "preact"
 import {useEffect, useState} from "preact/hooks"

@@ -1,4 +1,4 @@
-// sidebar.ts: sidebar layout and functionality
+// sidebar.tsx: sidebar layout and functionality
 
 import {h, render} from "preact"
 import {useEffect, useState} from "preact/hooks"
@@ -8,7 +8,6 @@ import {SidebarHeader, unseenReleaseNotes} from "./settings"
 import {ScheduleView, needDataFormatUpdate, activitiesInPast} from "./schedule"
 import {updateableOnThisPage} from "./opettaptied"
 import {Observable, useObservable} from "./utils"
-import {hoveredActivity, selectedActivities} from "./activities"
 import "./utils"
 
 const sidebarInitiallyOpen = typeof GM_getValue === "function" && !!GM_getValue("sidebarOpen")

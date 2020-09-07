@@ -1,4 +1,4 @@
-// settings.ts: settings and release notes
+// settings.tsx: settings and release notes
 
 import {h} from "preact"
 import {useEffect, useState} from "preact/hooks"
@@ -61,7 +61,7 @@ function About() {
 
 function ReleaseNotes() {
     const whatsNew = unseenReleaseNotes ? (
-        <p class="opp-success-text">
+        <p className="opp-success-text">
             {locf`settings.appUpdated`(VERSION)}
         </p>
     ) : null
@@ -140,11 +140,11 @@ function Settings() {
         <div className="opp-settings">
             <h4>{loc`settings.title`}</h4>
             <div>{loc`settings.language`}</div>
-            <fieldset class="opp-horizontal">
+            <fieldset className="opp-horizontal">
                 <legend>{loc`settings.theme`}</legend>
                 {Object.keys(THEMES).flatMap(theme => [
                     <input
-                            class="opp-theme-button"
+                            className="opp-theme-button"
                             id={`opp-theme-button-${theme}`}
                             type="radio"
                             name="opp-theme-selection"

@@ -1,4 +1,4 @@
-// tooltip.ts: floating tooltip
+// tooltip.tsx: floating tooltip
 
 import {useEffect, useState} from "preact/hooks"
 import $ from "jquery"
