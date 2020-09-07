@@ -1,6 +1,6 @@
 {
   "name": "oodiplusplus",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Efficiently plan your timetable right in Oodi and export it to your calendar.",
   "private": true,
   "dependencies": {

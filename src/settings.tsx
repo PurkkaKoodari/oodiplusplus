@@ -14,6 +14,14 @@ import {deserializeActivities, selectedActivities, serializeSelectedActivities} 
 
 const CHANGELOG = [
     {
+        version: "0.4",
+        changes: [
+            "Major rewrite using Preact",
+            "Activities can now be colored in schedule view",
+            "Added teacher information",
+        ],
+    },
+    {
         version: "0.3",
         changes: [
             "Schedule can now be exported as iCal (.ics)",
