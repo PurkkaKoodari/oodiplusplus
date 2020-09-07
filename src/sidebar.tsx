@@ -22,14 +22,14 @@ function Sidebar() {
     function toggleSidebar() {
         const willBeOpen = !open
         setOpen(willBeOpen)
-        if (willBeOpen) sidebarFocusRequested.value = false
+        sidebarFocusRequested.value = false
         if (typeof GM_setValue === "function") GM_setValue("sidebarOpen", willBeOpen)
     }
 
     return (
         <div className="opp-sidebar-wrapper">
             <button
-                    className={`opp-sidebar-opener ${focusRequested ? "opp-alert" : ""}`}
+                    className={`opp-sidebar-opener ${!open && focusRequested ? "opp-alert" : ""}`}
                     onClick={toggleSidebar}>
                 OODI++
             </button>
