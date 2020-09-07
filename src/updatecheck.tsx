@@ -80,7 +80,7 @@ function UpdateCheck() {
                     return
                 }
                 scheduleNextUpdateCheck(true, versionMatch[1])
-                setStatus(locf`update.lastCheck`(locale.datetime(new Date(lastUpdateCheck.last))))
+                setStatus(locf`update.lastCheck`(locale.datetime(new Date())))
                 setUpstreamVersion(versionMatch[1])
             },
             onerror() {
