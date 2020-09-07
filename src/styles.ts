@@ -23,10 +23,8 @@ type Theme = Readonly<{
     tooltipText: string
 
     scheduleBoxBorder: string
-    scheduleBoxHoverBackground1: string
-    scheduleBoxHoverBackground2: string
-    scheduleBoxRemoveBackground1: string
-    scheduleBoxRemoveBackground2: string
+    scheduleBoxHoverBackground: string
+    scheduleBoxRemoveBackground: string
 }>
 
 export const THEMES: MapObj<Theme> = {
@@ -51,10 +49,8 @@ export const THEMES: MapObj<Theme> = {
         tooltipText: "#000",
 
         scheduleBoxBorder: "#000",
-        scheduleBoxHoverBackground1: "#eef",
-        scheduleBoxHoverBackground2: "#ccf",
-        scheduleBoxRemoveBackground1: "#fee",
-        scheduleBoxRemoveBackground2: "#fcc",
+        scheduleBoxHoverBackground: "#ccf",
+        scheduleBoxRemoveBackground: "#fcc",
     },
     dark: {
         background: "#080808",
@@ -77,10 +73,8 @@ export const THEMES: MapObj<Theme> = {
         tooltipText: "#fff",
 
         scheduleBoxBorder: "#fff",
-        scheduleBoxHoverBackground1: "#006",
-        scheduleBoxHoverBackground2: "#118",
-        scheduleBoxRemoveBackground1: "#400",
-        scheduleBoxRemoveBackground2: "#600",
+        scheduleBoxHoverBackground: "#118",
+        scheduleBoxRemoveBackground: "#600",
     },
 }
 
@@ -93,7 +87,7 @@ let currentTheme: string
 
 export function setTheme(themeName: string) {
     currentTheme = themeName
-    GM_setValue("currentTheme", themeName)
+    if (typeof GM_setValue === "function") GM_setValue("currentTheme", themeName)
     const theme = THEMES[themeName]
 
     $(themeStyle as HTMLStyleElement).remove()
@@ -327,19 +321,43 @@ body.opp-sidebar-open .opp-sidebar-wrapper {
     cursor: help;
 }
 
-/* styles for schedule view */
+/* styles for schedule actions */
 .opp-schedule-actions {
     position: sticky;
     top: 0;
     z-index: 2000;
-    display: flex;
     margin: 0 -10px -10px;
     padding: 10px;
     background: ${theme.background};
 }
-.opp-schedule-actions > * {
+.opp-schedule-action-buttons {
+    display: flex;
+}
+.opp-schedule-action-buttons > * {
     margin-right: 5px;
 }
+.opp-color-picker-wrapper {
+    max-height: 0;
+    transition: max-height 0.3s ease;
+    overflow: hidden;
+}
+.opp-color-picker-wrapper.opp-open {
+    max-height: 130px;
+}
+.opp-color-picker-wrapper .opp-color-picker {
+    margin-top: 10px;
+}
+.opp-color-picker-wrapper .opp-color-picker-special {
+    display: flex;
+    margin-top: 5px;
+    padding-left: 5px;
+}
+.opp-color-picker-wrapper .opp-color-picker-special button {
+    flex: 1 1 0;
+    margin-right: 5px;
+}
+
+/* styles for schedule view */
 .opp-schedule {
     position: relative;
     margin: 0 -10px;
@@ -358,43 +376,47 @@ body.opp-sidebar-open .opp-sidebar-wrapper {
 .opp-schedule .opp-hour, .opp-schedule .opp-day {
     font-weight: bold;
 }
-.opp-schedule .opp-activity > span {
+.opp-schedule .opp-activity > * {
+    color: inherit !important;
+    background: none !important;
     overflow: hidden;
     overflow-wrap: anywhere;
     hyphens: auto;
+}
+.opp-schedule .opp-activity > span {
     flex: 0 1 auto;
+}
+.opp-schedule-view.opp-action-remove .opp-activity, .opp-schedule-view.opp-action-color .opp-activity {
+    cursor: pointer;
+}
+.opp-schedule-view.opp-action-remove .opp-activity > a, .opp-schedule-view.opp-action-color .opp-activity > a {
+    pointer-events: none;
 }
 @keyframes opp-schedule-hovered-activity {
     0% {
-        background: ${theme.scheduleBoxHoverBackground1};
+        opacity: 0.75;
     }
     50% {
-        background: ${theme.scheduleBoxHoverBackground2};
+        opacity: 1;
     }
     100% {
-        background: ${theme.scheduleBoxHoverBackground1};
+        opacity: 0.75;
     }
 }
-.opp-schedule .opp-activity.opp-hovered {
+.opp-schedule-view .opp-activity.opp-hovered {
     animation: 1s infinite ease opp-schedule-hovered-activity;
 }
-@keyframes opp-schedule-hovered-activity-remove {
-    0% {
-        background: ${theme.scheduleBoxRemoveBackground1};
-    }
-    50% {
-        background: ${theme.scheduleBoxRemoveBackground2};
-    }
-    100% {
-        background: ${theme.scheduleBoxRemoveBackground1};
-    }
+.opp-schedule-view.opp-action-none .opp-activity.opp-hovered {
+    background-color: ${theme.scheduleBoxHoverBackground}; /* don't override colored activities */
+    color: ${theme.text};
 }
 .opp-schedule-view.opp-action-remove .opp-activity.opp-hovered {
-    animation: 1s infinite ease opp-schedule-hovered-activity-remove;
-    cursor: pointer;
+    background-color: ${theme.scheduleBoxRemoveBackground} !important; /* override colored activities */
+    color: ${theme.text} !important;
 }
-.opp-schedule-view.opp-action-remove .opp-activity a {
-    pointer-events: none;
+.opp-schedule-view.opp-action-color.opp-color-remove .opp-activity.opp-hovered {
+    background-color: transparent !important; /* override colored activities */
+    color: ${theme.text} !important;
 }
 .opp-schedule .opp-activity .opp-outdated-indicator {
     position: absolute;
@@ -407,6 +429,44 @@ body.opp-sidebar-open .opp-sidebar-wrapper {
     line-height: 1;
     padding: 5px;
     cursor: help;
+}
+
+/* styles for the color picker */
+.opp-color-picker {
+    display: grid;
+    grid-template-columns: auto 80px;
+    grid-template-rows: 1fr 1fr 1fr;
+    grid-gap: 10px 5px;
+    padding: 5px 5px 5px 0;
+    height: 90px;
+    box-sizing: border-box;
+    user-select: none;
+}
+.opp-color-slider {
+    grid-column: 1;
+}
+.opp-color-slider .opp-color-slider-bg {
+    position: relative;
+    margin: 0 5px;
+    height: 20px;
+    border: 1px solid ${theme.buttonBorder};
+    box-sizing: border-box;
+    cursor: crosshair;
+}
+.opp-color-slider .opp-color-slider-handle {
+    position: absolute;
+    top: -3px;
+    bottom: -3px;
+    width: 9px;
+    transform: translateX(-50%);
+    pointer-events: none;
+    background: ${theme.buttonBackground};
+    border: 1px solid ${theme.buttonBorder};
+    box-sizing: border-box;
+}
+.opp-color-chosen {
+    grid-column: 2;
+    grid-row: 1/4;
 }
 
 /* styles for tooltip */

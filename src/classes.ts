@@ -1,6 +1,7 @@
 // classes.ts: data classes
 
 import {selectedActivities} from "./activities"
+import {isValidRgb, RGB} from "./colors"
 import {thisMonday} from "./utils"
 
 /** Compared to Activity.dataVersion to see which activities need an update. */
@@ -73,6 +74,7 @@ export type SerializedActivity = {
     opetTapId: string
     language: string
     teachers: SerializedTeacher[]
+    color: RGB | null
     lastUpdate: string
     dataVersion: number
     instances: SerializedInstance[]
@@ -92,6 +94,8 @@ export class Activity {
     language: string
     /** The names and email addresses of the teachers for this activity. */
     teachers: Teacher[]
+    /** The color of the activity. */
+    color: RGB | null
     /** The latest moment the activity was updated. */
     lastUpdate: Date
     /** The latest version of data imported into the activity. */
@@ -103,13 +107,14 @@ export class Activity {
     /** A function to call to update the HTML injected into opettaptied.js with this activity's data. */
     updateOpettaptied: () => void = () => {}
 
-    constructor(course: Course, type: string, name: string, opetTapId: string, language: string, teachers: Teacher[], lastUpdate: Date, dataVersion: number = CURRENT_DATA_VERSION) {
+    constructor(course: Course, type: string, name: string, opetTapId: string, language: string, teachers: Teacher[], color: RGB | null, lastUpdate: Date, dataVersion: number = CURRENT_DATA_VERSION) {
         this.course = course
         this.type = type
         this.name = name
         this.opetTapId = opetTapId
         this.language = language
         this.teachers = teachers
+        this.color = color
         this.lastUpdate = lastUpdate
         this.dataVersion = dataVersion
     }
@@ -149,9 +154,11 @@ export class Activity {
         if (!this.updatedActivity) throw new Error("nothing to update")
         this.course = this.updatedActivity.course
         this.type = this.updatedActivity.type
+        // name not updated, as it must have been same as currently
         this.opetTapId = this.updatedActivity.opetTapId
         this.language = this.updatedActivity.language
         this.teachers = this.updatedActivity.teachers
+        // color not updated, reuse previous color
         this.instances = this.updatedActivity.instances
         this.dataVersion = CURRENT_DATA_VERSION
         this.lastUpdate = this.updatedActivity.lastUpdate
@@ -167,6 +174,7 @@ export class Activity {
             opetTapId: this.opetTapId,
             language: this.language,
             teachers: this.teachers.map(teacher => teacher.serialize()),
+            color: this.color,
             dataVersion: this.dataVersion,
             lastUpdate: this.lastUpdate.toISOString(),
             instances: this.instances.map(instance => instance.serialize()),
@@ -174,22 +182,31 @@ export class Activity {
     }
 
     /** Deserializes an activity from the form outputted by serialize(). */
-    static deserialize({course, type, name, opetTapId, language, teachers, lastUpdate, dataVersion, instances}: SerializedActivity) {
+    static deserialize({course, type, name, opetTapId, language, teachers, color, lastUpdate, dataVersion, instances}: SerializedActivity) {
         const courseObj = Course.deserialize(course)
 
         if (typeof type !== "string") throw new Error("invalid activity type")
+        
         if (typeof name !== "string" || !name) throw new Error("missing activity name")
+        
         if (opetTapId && typeof opetTapId !== "string") throw new Error("invalid activity opetTapId")
+        
         const lastUpdateDate = new Date(lastUpdate || new Date())
         if (isNaN(lastUpdateDate.getTime())) throw new Error("invalid activity lastUpdate")
+        
         const dataVersionNum = dataVersion || 0
         if (typeof dataVersionNum !== "number") throw new Error("invalid activity dataVersion")
+        
         const languageStr = language || ""
         if (typeof languageStr !== "string") throw new Error("invalid language")
+        
         const teachersArr = teachers ? teachers.map(serializedTeacher => Teacher.deserialize(serializedTeacher)) : []
         if (!Array.isArray(teachersArr)) throw new Error("invalid activity teachers")
 
-        const activity = new Activity(courseObj, type, name, opetTapId, languageStr, teachersArr, lastUpdateDate, dataVersionNum)
+        const colorRgb = color || null
+        if (colorRgb !== null && !isValidRgb(colorRgb)) throw new Error("invalid activity color")
+
+        const activity = new Activity(courseObj, type, name, opetTapId, languageStr, teachersArr, colorRgb, lastUpdateDate, dataVersionNum)
         activity.instances = instances.map(serializedInstance => Instance.deserialize(activity, serializedInstance))
         return activity
     }

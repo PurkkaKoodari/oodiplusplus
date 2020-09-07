@@ -73,7 +73,7 @@ export const opettaptiedActivities = (() => {
             })
 
             // reuse activity from selectedActivities if one exists
-            const parsedActivity = new Activity(course, activityType, activityName, opetTapId, language, teachers, new Date())
+            const parsedActivity = new Activity(course, activityType, activityName, opetTapId, language, teachers, null, new Date())
             const activity = getExistingSelectedActivity(parsedActivity)
 
             // walk all date/time/location specifiers for this activity

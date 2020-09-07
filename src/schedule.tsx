@@ -10,9 +10,7 @@ import {OpettaptiedUpdateableNotification} from "./opettaptied"
 import {exportSelectedActivitiesAsIcal} from "./ical"
 import {Tooltip} from "./tooltip"
 import {deselectActivity, hoverActivity, hoveredActivity, selectedActivities, unhoverActivity} from "./activities"
-
-/** Don't run events while schedule is updating to avoid events being triggered due to elements appearing/disappearing. */
-let scheduleUpdating = false
+import {ColorPicker, HSV, RGB, hsvToRgb, rgbToCss, textColor, rgbToHsv} from "./colors"
 
 type RenderWeek = {
     instances: Instance[]
@@ -45,9 +43,12 @@ type InstanceViewProps = {
     columns: number[]
     firstHour: number
     onInstanceClick: (instance: Instance) => void
+    selectedAction: ScheduleAction
+    selectedColor: HSV
+    selectedColorMode: ScheduleColorMode
 }
 
-function InstanceView({renderInstance, columns, firstHour, onInstanceClick}: InstanceViewProps) {
+function InstanceView({renderInstance, columns, firstHour, onInstanceClick, selectedAction, selectedColor, selectedColorMode}: InstanceViewProps) {
     const {instance} = renderInstance
     const {activity} = instance
 
@@ -61,13 +62,38 @@ function InstanceView({renderInstance, columns, firstHour, onInstanceClick}: Ins
         </Tooltip>
     ) : null
 
-    const tooltip = `\
+    // show tooltip based on action
+    let tooltip
+    switch (selectedAction) {
+        case "remove":
+            tooltip = loc`schedule.actions.remove.tooltip`
+            break
+        case "color":
+            switch (selectedColorMode) {
+                case "remove":
+                    tooltip = loc`schedule.actions.color.remove.tooltip`
+                    break
+                case "eyedropper":
+                    tooltip = loc`schedule.actions.color.eyedropper.tooltip`
+                    break
+                default:
+                    tooltip = loc`schedule.actions.color.tooltip`
+                    break
+            }
+            break
+        default:
+            tooltip = `\
 ${activity.course.code} ${activity.course.name}
 ${activity.type} ${activity.name}
 ${locale.weekdays[renderInstance.weekday]} ${locale.time(instance.start)}\u2013${locale.time(instance.end)}\
 ${instance.location && `\n${loc`schedule.tooltip.location`} ${instance.location}`}\
 ${activity.teachers.length ? `\n${loc`schedule.tooltip.teacher`} ${activity.teachers.map(teacher => teacher.name).join(", ")}` : ""}`
+            break
+    }
     
+    // override activity color when coloring
+    const color = selectedAction === "color" && selectedColorMode === "none" && hovered === activity ? hsvToRgb(selectedColor) : activity.color
+
     return (
         <Tooltip text={tooltip}>
             {({onMouseEnter, onMouseLeave}) =>
@@ -79,6 +105,8 @@ ${activity.teachers.length ? `\n${loc`schedule.tooltip.teacher`} ${activity.teac
                             top: `${20 + 60 * (renderInstance.start / ONE_HOUR - firstHour)}px`,
                             width: `${100 / columns[renderInstance.weekday] * (renderInstance.columns!.end - renderInstance.columns!.start + 1)}px`,
                             height: `${60 * (renderInstance.end - renderInstance.start) / ONE_HOUR}px`,
+                            "background-color": color ? rgbToCss(color) : "",
+                            color: color ? rgbToCss(textColor(color)) : "",
                         }}
                         onMouseEnter={() => {
                             hoverActivity(activity)
@@ -102,9 +130,12 @@ ${activity.teachers.length ? `\n${loc`schedule.tooltip.teacher`} ${activity.teac
 type WeekViewProps = {
     renderWeek: RenderWeek
     onInstanceClick: (instance: Instance) => void
+    selectedAction: ScheduleAction
+    selectedColor: HSV
+    selectedColorMode: ScheduleColorMode
 }
 
-function WeekView({renderWeek, onInstanceClick}: WeekViewProps) {
+function WeekView({renderWeek, onInstanceClick, selectedAction, selectedColor, selectedColorMode}: WeekViewProps) {
     // transform list of weeks into list of ranges
     const weekRanges = [{start: renderWeek.weeks[0], end: renderWeek.weeks[0]}]
     for (const week of renderWeek.weeks.slice(1)) {
@@ -167,7 +198,7 @@ function WeekView({renderWeek, onInstanceClick}: WeekViewProps) {
     return (
         <>
             <h3>{dateHeader}</h3>
-            <div class="opp-schedule" style={{height: `${20 + (lastHour - firstHour) * 60}px`}}>
+            <div className="opp-schedule" style={{height: `${20 + (lastHour - firstHour) * 60}px`}}>
                 {range(daysToRender).map(day =>
                     <div
                             className="opp-day"
@@ -199,50 +230,32 @@ function WeekView({renderWeek, onInstanceClick}: WeekViewProps) {
                             renderInstance={renderInstance}
                             columns={columns}
                             firstHour={firstHour}
-                            onInstanceClick={onInstanceClick} />
+                            onInstanceClick={onInstanceClick}
+                            selectedAction={selectedAction}
+                            selectedColor={selectedColor}
+                            selectedColorMode={selectedColorMode} />
                 )}
             </div>
         </>
     )
 }
 
-type ScheduleAction = {
-    name: string
-    action: (instance: Instance) => void
-    singleUse: boolean
-}
+type ScheduleAction = "none" | "remove" | "color"
+type ScheduleColorMode = "none" | "eyedropper" | "remove"
 
-const NO_ACTION: ScheduleAction = {
-    name: "none",
-    action: () => {},
-    singleUse: false
-}
-
-const REMOVE_ACTION: ScheduleAction = {
-    name: "remove",
-    action: ({activity}) => {
-        // stop hovering the activity
-        unhoverActivity(activity)
-        // deselect and update UI
-        deselectActivity(activity)
-    },
-    singleUse: true
-}
-
-type ScheduleActionButtonProps = {
-    action: ScheduleAction
-    selectedAction: ScheduleAction
-    setSelectedAction: (action: ScheduleAction) => void
+type ScheduleActionButtonProps<T extends string> = {
+    action: T
+    selected: T
+    setSelected: (action: T) => void
     children: any
 }
 
-function ScheduleActionButton({action, selectedAction, setSelectedAction, children}: ScheduleActionButtonProps) {
-    const selected = selectedAction.name === action.name
+function ScheduleActionButton<T extends string>({action, selected, setSelected, children}: ScheduleActionButtonProps<T>) {
     return (
         <button
                 type="button"
-                className={selected ? "opp-active" : ""}
-                onClick={() => setSelectedAction(selected ? NO_ACTION : REMOVE_ACTION)}>
+                className={selected === action ? "opp-active" : ""}
+                onClick={() => setSelected(selected === action ? "none" as T : action)}>
             {children}
         </button>
     )
@@ -332,17 +345,53 @@ export function ScheduleView({sidebarOpen}: {sidebarOpen: boolean}) {
 
     // sort schedules by first week
     const renderWeeks: RenderWeek[] = Array.from(weekContentIndex.values())
-    renderWeeks.sort((lhs, rhs) => lhs.weeks[0].getTime() - rhs.weeks[0].getTime())    
+    renderWeeks.sort((lhs, rhs) => lhs.weeks[0].getTime() - rhs.weeks[0].getTime())
 
-    const [selectedAction, setSelectedAction] = useState(NO_ACTION)
+    // schedule action status
+    const [selectedAction, setSelectedAction] = useState<ScheduleAction>("none")
+    const [selectedColor, setSelectedColor] = useState<HSV>([Math.random() * 360, 1, 1])
+    const [selectedColorMode, setSelectedColorMode] = useState<ScheduleColorMode>("none")
 
+    // deselect tool if sidebar closes
     useEffect(() => {
-        if (!sidebarOpen) setSelectedAction(NO_ACTION)
-    })
+        if (!sidebarOpen) setSelectedAction("none")
+    }, [sidebarOpen])
 
+    // deselect remove-color/eyedropper when coloring stops
+    useEffect(() => {
+        if (selectedAction !== "color") setSelectedColorMode("none")
+    }, [selectedAction])
+
+    // deselect remove-color/eyedropper when color set manually
+    function onColorChanged(color: HSV) {
+        setSelectedColor(color)
+        setSelectedColorMode("none")
+    }
+
+    // called by InstanceView when clicked
     function onInstanceClick(instance: Instance) {
-        selectedAction.action(instance)
-        if (selectedAction.singleUse) setSelectedAction(NO_ACTION)
+        const {activity} = instance
+        switch (selectedAction) {
+            case "remove":
+                // make sure the activity doesn't get stuck as hovered
+                unhoverActivity(activity)
+                deselectActivity(activity)
+                // only delete one per click
+                setSelectedAction("none")
+                break
+            case "color":
+                if (selectedColorMode === "remove") {
+                    activity.color = null
+                    selectedActivities.value = [...selectedActivities.value]
+                } else if (selectedColorMode === "eyedropper") {
+                    if (activity.color) setSelectedColor(rgbToHsv(activity.color))
+                    setSelectedColorMode("none")
+                } else {
+                    activity.color = hsvToRgb(selectedColor)
+                    selectedActivities.value = [...selectedActivities.value]
+                }
+                break
+        }
     }
 
     return (
@@ -351,20 +400,38 @@ export function ScheduleView({sidebarOpen}: {sidebarOpen: boolean}) {
             <OpettaptiedUpdateableNotification />
             <DeletePastNotification />
             <div className="opp-schedule-actions">
-                <div>{loc`schedule.actions.title`}</div>
-                <ScheduleActionButton
-                        selectedAction={selectedAction}
-                        setSelectedAction={setSelectedAction}
-                        action={REMOVE_ACTION}>
-                    {loc`schedule.actions.remove`}
-                </ScheduleActionButton>
-                <button type="button" onClick={() => exportSelectedActivitiesAsIcal()}>
-                    {loc`schedule.actions.exportIcal`}
-                </button>
+                <div className="opp-schedule-action-buttons">
+                    <div>{loc`schedule.actions.title`}</div>
+                    <ScheduleActionButton selected={selectedAction} setSelected={setSelectedAction} action={"remove"}>
+                        {loc`schedule.actions.remove`}
+                    </ScheduleActionButton>
+                    <ScheduleActionButton selected={selectedAction} setSelected={setSelectedAction} action={"color"}>
+                        {loc`schedule.actions.color`}
+                    </ScheduleActionButton>
+                    <button type="button" onClick={() => exportSelectedActivitiesAsIcal()}>
+                        {loc`schedule.actions.exportIcal`}
+                    </button>
+                </div>
+                <div class={`opp-color-picker-wrapper ${selectedAction === "color" ? "opp-open" : ""}`}>
+                    <ColorPicker color={selectedColor} setColor={onColorChanged} />
+                    <div class="opp-color-picker-special">
+                        <ScheduleActionButton selected={selectedColorMode} setSelected={setSelectedColorMode} action={"eyedropper"}>
+                            {loc`schedule.actions.color.eyedropper`}
+                        </ScheduleActionButton>
+                        <ScheduleActionButton selected={selectedColorMode} setSelected={setSelectedColorMode} action={"remove"}>
+                            {loc`schedule.actions.color.remove`}
+                        </ScheduleActionButton>
+                    </div>
+                </div>
             </div>
-            <div className={`opp-schedule-view opp-action-${selectedAction.name}`}>
+            <div className={`opp-schedule-view opp-action-${selectedAction} ${selectedAction === "color" ? `opp-color-${selectedColorMode}` : ""}`}>
                 {renderWeeks.map(renderWeek => 
-                    <WeekView renderWeek={renderWeek} onInstanceClick={onInstanceClick} />
+                    <WeekView
+                            renderWeek={renderWeek}
+                            onInstanceClick={onInstanceClick}
+                            selectedAction={selectedAction}
+                            selectedColor={selectedColor}
+                            selectedColorMode={selectedColorMode} />
                 )}
             </div>
         </>
