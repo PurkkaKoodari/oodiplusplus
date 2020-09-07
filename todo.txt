@@ -2,6 +2,5 @@ TODO:
 - add backend sync
 - resizable schedule view
 - gracefully handle deserializing partially invalid activities
-- export colors to ical
 - location database
 - add image gallery to README when the ui is nicer

@@ -4,6 +4,7 @@ import {h} from "preact"
 import {useState} from "preact/hooks"
 
 import {range} from "./utils"
+import CSS_COLORS from "./csscolors"
 
 export type RGB = [number, number, number]
 export type HSV = [number, number, number]
@@ -73,6 +74,27 @@ export function textColor(background: RGB): RGB {
 /** Converts an RGB color to a CSS rgb() value. */
 export function rgbToCss([r, g, b]: RGB) {
     return `rgb(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(b * 255)})`
+}
+
+/** CSS colors converted to YUV for nearestCssColor, lazy-generated. */
+let cssColorsYuv: [string, YUV][] | null = null
+
+/** Approximates the nearest CSS3 named color to the given RGB color using YUV. */
+export function nearestCssColor(rgb: RGB): string {
+    // lazily convert CSS colors to YUV
+    if (cssColorsYuv === null) cssColorsYuv = Object.entries(CSS_COLORS).map(([name, [r, g, b]]) => [name, rgbToYuv([r / 255, g / 255, b / 255])])
+
+    const [ourY, ourU, ourV] = rgbToYuv(rgb) 
+    let best = ""
+    let bestScore = Infinity
+    for (const [name, [cssY, cssU, cssV]] of cssColorsYuv) {
+        const score = Math.hypot(cssY - ourY, cssU - ourU, cssV - ourV)
+        if (score < bestScore) {
+            best = name
+            bestScore = score
+        }
+    }
+    return best
 }
 
 type ColorSliderProps = {

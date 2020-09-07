@@ -4,6 +4,7 @@ import {Activity, Instance} from "./classes"
 import {loc, locale, locf} from "./locales"
 import {selectedActivities} from "./activities"
 import {downloadFile, Observable, zeropad} from "./utils"
+import { nearestCssColor } from "./colors"
 
 class IcalProperty {
     key: string
@@ -152,6 +153,7 @@ function createIcalFromActivities(activities: Iterable<Activity>, format: IcalEx
             event.add(IcalProperty.text("CATEGORIES", activity.type))
             for (const teacher of activity.teachers) event.add(new IcalProperty("ATTENDEE", `mailto:${teacher.email}`).param("CN", teacher.name))
             event.add(IcalProperty.text("URL", activity.url))
+            event.add(IcalProperty.text("COLOR", activity.color ? nearestCssColor(activity.color) : ""))
             calendar.add(event)
         }
     }
