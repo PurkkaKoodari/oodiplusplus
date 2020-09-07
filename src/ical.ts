@@ -155,6 +155,7 @@ function createIcalFromActivities(activities: Iterable<Activity>, format: IcalEx
             event.add(IcalProperty.text("URL", activity.url))
             event.add(IcalProperty.text("COLOR", activity.color ? nearestCssColor(activity.color) : ""))
             calendar.add(event)
+            instanceNo++
         }
     }
     return calendar.toString()
