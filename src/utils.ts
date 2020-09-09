@@ -44,7 +44,7 @@ export const timeOfDay = (date: Date) => (date.getTime() - date.getTimezoneOffse
 /** The start of the current week's Monday at the time of page load. */
 export const thisMonday = new Date()
 thisMonday.setTime(thisMonday.getTime() - timeOfDay(thisMonday))
-while (thisMonday.getDay() != 1) thisMonday.setDate(thisMonday.getDate() + 1)
+while (thisMonday.getDay() != 1) thisMonday.setDate(thisMonday.getDate() - 1)
 
 
 
