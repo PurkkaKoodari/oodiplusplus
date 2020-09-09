@@ -252,7 +252,8 @@ function WeekView({renderWeek, onInstanceClick, selectedAction, selectedColor, s
                             onInstanceClick={onInstanceClick}
                             selectedAction={selectedAction}
                             selectedColor={selectedColor}
-                            selectedColorMode={selectedColorMode} />
+                            selectedColorMode={selectedColorMode}
+                            key={renderInstance.instance} />
                 )}
             </div>
         </>
@@ -450,7 +451,8 @@ export function ScheduleView({sidebarOpen}: {sidebarOpen: boolean}) {
                             onInstanceClick={onInstanceClick}
                             selectedAction={selectedAction}
                             selectedColor={selectedColor}
-                            selectedColorMode={selectedColorMode} />
+                            selectedColorMode={selectedColorMode}
+                            key={renderWeek.weeks[0].getTime()} />
                 )}
             </div>
         </>
