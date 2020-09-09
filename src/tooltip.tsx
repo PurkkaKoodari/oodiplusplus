@@ -60,7 +60,7 @@ const $tooltip = $.make("div")
         .appendTo("body")
 
 // track mouse position
-$("body").mousemove(e => {
+$(window).mousemove(e => {
     mousePos = {x: e.clientX, y: e.clientY}
     updateTooltip()
 })

@@ -142,16 +142,12 @@ export function setTheme(themeName: string) {
     overflow: auto;
     transition: margin-right 0.3s ease;
 }
-body.opp-sidebar-open .opp-body-wrapper {
-    margin-right: 540px;
-}
 .opp-sidebar-wrapper {
     position: fixed;
     right: 0;
     top: 0;
     z-index: 1000;
     height: 100vh;
-    width: 0;
     transition: width 0.3s ease;
     margin: 0;
     padding: 0;
@@ -159,20 +155,31 @@ body.opp-sidebar-open .opp-body-wrapper {
     background: ${theme.background};
     font-size: 14px;
 }
-body.opp-sidebar-open .opp-sidebar-wrapper {
-    width: 540px;
+body.opp-sidebar-closed .opp-body-wrapper {
+    margin-right: 0 !important; /* override value set by JS */
+}
+body.opp-sidebar-closed .opp-sidebar-wrapper {
+    width: 0 !important; /* override value set by JS */
+}
+body.opp-sidebar-resizing .opp-body-wrapper, body.opp-sidebar-resizing .opp-sidebar-wrapper {
+    transition: none;
 }
 .opp-sidebar-content {
-    width: 540px;
     height: 100vh;
     padding: 0 10px;
     box-sizing: border-box;
     overflow: hidden auto;
 }
-.opp-sidebar-opener {
+.opp-sidebar-buttons {
     position: absolute;
     right: 100%;
-    top: 10px;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+.opp-sidebar-buttons button {
+    margin-top: 10px;
     padding: 10px;
     border: 1px solid #000;
     border-right: none;
@@ -180,8 +187,15 @@ body.opp-sidebar-open .opp-sidebar-wrapper {
     background: #fff; /* intentionally not styled to match main Oodi side of page */
     color: #000;
     font-size: 14px;
+    width: 18px;
+    box-sizing: content-box;
+}
+.opp-sidebar-opener {
     writing-mode: vertical-rl;
     cursor: pointer;
+}
+.opp-sidebar-resizer {
+    cursor: ew-resize;
 }
 @keyframes opp-sidebar-opener-alert {
     0% {

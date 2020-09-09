@@ -38,17 +38,32 @@ class RenderInstance {
     }
 }
 
+const HOURS_WIDTH = 30
+const WEEKDAYS_HEIGHT = 20
+const HOUR_HEIGHT = 60
+
+function columnStart(days: number, daysToRender: number) {
+    // 30px + (100% - 30px) * (days / daysToRender)
+    return `calc(${HOURS_WIDTH * (1 - days / daysToRender)}px + ${100 * days / daysToRender}%)`
+}
+
+function columnWidth(days: number, daysToRender: number) {
+    // (100% - 30px) * (days / daysToRender)
+    return `calc(${100 * days / daysToRender}% - ${HOURS_WIDTH * days / daysToRender}px)`
+}
+
 type InstanceViewProps = {
     renderInstance: RenderInstance
-    columns: number[]
+    columnCounts: number[]
     firstHour: number
+    daysToRender: number
     onInstanceClick: (instance: Instance) => void
     selectedAction: ScheduleAction
     selectedColor: HSV
     selectedColorMode: ScheduleColorMode
 }
 
-function InstanceView({renderInstance, columns, firstHour, onInstanceClick, selectedAction, selectedColor, selectedColorMode}: InstanceViewProps) {
+function InstanceView({renderInstance, columnCounts, firstHour, daysToRender, onInstanceClick, selectedAction, selectedColor, selectedColorMode}: InstanceViewProps) {
     const {instance} = renderInstance
     const {activity} = instance
 
@@ -94,6 +109,9 @@ ${activity.teachers.length ? `\n${loc`schedule.tooltip.teacher`} ${activity.teac
     // override activity color when coloring
     const color = selectedAction === "color" && selectedColorMode === "none" && hovered === activity ? hsvToRgb(selectedColor) : activity.color
 
+    const startColumn = renderInstance.columns!.start
+    const widthColumns = renderInstance.columns!.end - renderInstance.columns!.start + 1
+
     return (
         <Tooltip text={tooltip}>
             {({onMouseEnter, onMouseLeave}) =>
@@ -101,10 +119,10 @@ ${activity.teachers.length ? `\n${loc`schedule.tooltip.teacher`} ${activity.teac
                         className={`opp-activity ${hovered === activity ? "opp-hovered" : ""}`}
                         lang={activity.language || language}
                         style={{
-                            left: `${20 + 100 * renderInstance.weekday + 100 / columns[renderInstance.weekday] * renderInstance.columns!.start}px`,
-                            top: `${20 + 60 * (renderInstance.start / ONE_HOUR - firstHour)}px`,
-                            width: `${100 / columns[renderInstance.weekday] * (renderInstance.columns!.end - renderInstance.columns!.start + 1)}px`,
-                            height: `${60 * (renderInstance.end - renderInstance.start) / ONE_HOUR}px`,
+                            left: columnStart(renderInstance.weekday + 1 / columnCounts[renderInstance.weekday] * startColumn, daysToRender),
+                            top: `${WEEKDAYS_HEIGHT + HOUR_HEIGHT * (renderInstance.start / ONE_HOUR - firstHour)}px`,
+                            width: columnWidth(1 / columnCounts[renderInstance.weekday] * widthColumns, daysToRender),
+                            height: `${HOUR_HEIGHT * (renderInstance.end - renderInstance.start) / ONE_HOUR}px`,
                             "background-color": color ? rgbToCss(color) : "",
                             color: color ? rgbToCss(textColor(color)) : "",
                         }}
@@ -154,7 +172,7 @@ function WeekView({renderWeek, onInstanceClick, selectedAction, selectedColor, s
     // compute horizontal slots for overlapping instances and first/last hours
     let firstHour = 24
     let lastHour = 0
-    const columns = [1, 1, 1, 1, 1, 0, 0]
+    const columnCounts = [1, 1, 1, 1, 1, 0, 0]
     const renderInstances = []
     for (const instance of renderWeek.instances) {
         // convert to Finnish weekdays here
@@ -175,7 +193,7 @@ function WeekView({renderWeek, onInstanceClick, selectedAction, selectedColor, s
         while (overlappingColumns.includes(column)) column++
         renderInstance.columns = {start: column, end: column}
         // keep track of how many columns are used per weekday
-        columns[weekday] = Math.max(columns[weekday], column + 1)
+        columnCounts[weekday] = Math.max(columnCounts[weekday], column + 1)
         renderInstances.push(renderInstance)
     }
     // do a second pass to widen any instances necessary
@@ -189,11 +207,11 @@ function WeekView({renderWeek, onInstanceClick, selectedAction, selectedColor, s
         }
         // expand left & right
         while (renderInstance.columns!.start > 0 && !overlappingColumns.includes(renderInstance.columns!.start - 1)) renderInstance.columns!.start--
-        while (renderInstance.columns!.end < columns[renderInstance.weekday] - 1 && !overlappingColumns.includes(renderInstance.columns!.end + 1)) renderInstance.columns!.end++
+        while (renderInstance.columns!.end < columnCounts[renderInstance.weekday] - 1 && !overlappingColumns.includes(renderInstance.columns!.end + 1)) renderInstance.columns!.end++
     }
 
     // see if there is anything in the weekends
-    const daysToRender = columns[5] > 0 || columns[6] > 0 ? 7 : 5
+    const daysToRender = columnCounts[5] > 0 || columnCounts[6] > 0 ? 7 : 5
 
     return (
         <>
@@ -203,10 +221,10 @@ function WeekView({renderWeek, onInstanceClick, selectedAction, selectedColor, s
                     <div
                             className="opp-day"
                             style={{
-                                left: `${20 + 100 * day}px`,
+                                left: columnStart(day, daysToRender),
                                 top: "0",
-                                width: `${500 / daysToRender}px`,
-                                height: "20px",
+                                width: columnWidth(1, daysToRender),
+                                height: `${WEEKDAYS_HEIGHT}px`,
                             }}
                             key={`day${day}`}>
                         {locale.weekdays[day]}
@@ -217,9 +235,9 @@ function WeekView({renderWeek, onInstanceClick, selectedAction, selectedColor, s
                             className="opp-hour"
                             style={{
                                 left: "0",
-                                top: `${20 + 60 * (hour - firstHour)}px`,
-                                width: "20px",
-                                height: "60px",
+                                top: `${WEEKDAYS_HEIGHT + HOUR_HEIGHT * (hour - firstHour)}px`,
+                                width: `${HOURS_WIDTH}px`,
+                                height: `${HOUR_HEIGHT}px`,
                             }}
                             key={`hour${hour}`}>
                         {hour.toString().padStart(2, "0")}
@@ -228,8 +246,9 @@ function WeekView({renderWeek, onInstanceClick, selectedAction, selectedColor, s
                 {renderInstances.map(renderInstance =>
                     <InstanceView
                             renderInstance={renderInstance}
-                            columns={columns}
+                            columnCounts={columnCounts}
                             firstHour={firstHour}
+                            daysToRender={daysToRender}
                             onInstanceClick={onInstanceClick}
                             selectedAction={selectedAction}
                             selectedColor={selectedColor}

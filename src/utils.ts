@@ -1,6 +1,6 @@
 // utils.ts: general utility functions
 
-import {useState, useEffect} from "preact/hooks"
+import {useState, useEffect, useCallback, Inputs} from "preact/hooks"
 import $ from "jquery"
 
 
@@ -100,6 +100,17 @@ export function useObservable<T>(observable: Observable<T>): T {
     })
 
     return stored
+}
+
+/** Adds and tears down an event listener. */
+export function useEventHandler<E extends Event>(target: EventTarget, event: string, handler: (e: E) => void, inputs: Inputs) {
+    // useCallback to ensure the callback gets updated only when necessary...
+    const handlerCallback = useCallback(handler, inputs)
+    // ...and use that as a dependency to useEffect to avoid unnecessary cycles
+    useEffect(() => {
+        target.addEventListener(event, handlerCallback as (e: Event) => void)
+        return () => target.removeEventListener(event, handlerCallback as (e: Event) => void)
+    }, [handlerCallback])
 }
 
 
