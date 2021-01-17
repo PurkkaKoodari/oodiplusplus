@@ -17,11 +17,11 @@ Oodi++:n käyttöön tarvitset userscript-lisäosan kuten Tampermonkey. Lataa se
 
 Tämän jälkeen lataa itse userscript. Se on saatavilla kolmena versiona:
 
-- [Automaattipäivittyvä versio](oodiplusplus.autoupdate.user.js) päivittyy itsestään Tampermonkeyn kautta.
-- [Automaattitarkistava versio](oodiplusplus.autocheck.user.js) tarkistaa automaattisesti päivitykset,
+- [Automaattipäivittyvä versio](https://purkka.codes/oodi/oodiplusplus.autoupdate.user.js) päivittyy itsestään Tampermonkeyn kautta.
+- [Automaattitarkistava versio](https://purkka.codes/oodi/oodiplusplus.autocheck.user.js) tarkistaa automaattisesti päivitykset,
   mutta ei suorita koodia verkosta. Valitse tämä vaihtoehto, jos haluat lukea koodin läpi ja varmistua, ettei
   koodiin tehdä muutoksia huomaamattasi.
-- [Foliohattuversio](oodiplusplus.folio.user.js) ei tee mitään verkkopyyntöjä. Koska joku kuitenkin pyytää tätä.
+- [Foliohattuversio](https://purkka.codes/oodi/oodiplusplus.folio.user.js) ei tee mitään verkkopyyntöjä. Koska joku kuitenkin pyytää tätä.
 
 Skriptin dependencyinä ovat [Preact][preact] ja [jQuery][jquery], jotka sisältyvät tiedostoon. Jos haluat tarkistaa
 niiden minifioidut lähdekoodit, kyseiset tiedostot ovat [preact.module.js], [hooks.module.js] ja [jquery.slim.min.js].
