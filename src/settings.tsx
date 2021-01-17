@@ -14,6 +14,12 @@ import {deserializeActivities, selectedActivities, serializeSelectedActivities} 
 
 const CHANGELOG = [
     {
+        version: "0.5",
+        changes: [
+            "Added sidebar resizing",
+        ],
+    },
+    {
         version: "0.4",
         changes: [
             "Major rewrite using Preact",
