@@ -13,7 +13,7 @@ index.html: README.md.html index.header.html index.footer.html
 	cat index.header.html $< index.footer.html > $@
 	sed -i -e s/README.en.md/index.en.html/ $@
 
-index.en.html: README.en.md.html
+index.en.html: README.en.md.html index.header.html index.footer.html
 	cat index.header.html $< index.footer.html > $@
 	sed -i -e s/README.md/index.html/ $@
 
