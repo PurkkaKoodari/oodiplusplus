@@ -47,7 +47,7 @@ export const opettaptiedActivities = (() => {
     const activities: Activity[] = []
 
     // walk each activity type table
-    $("form[name=ilmotForm] > table.kll > tbody").each(function () {
+    $("form[name=ilmotForm] > table > tbody").each(function () {
 
         // activity type, such as "Lecture" or "Exercise"
         const activityType = $(this).children("tr").first().children("th:nth-child(3)").children("table").children("tbody") // first (header) row of .kll, table inside third cell

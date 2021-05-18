@@ -65,7 +65,6 @@ function Sidebar() {
 
     // handle actual resizing
     useEventHandler(window, "mousemove", (e: MouseEvent) => {
-        console.log(resizing, e.clientX)
         if (resizing) {
             const [startWidth, startPos] = resizing
             const rawWidth = startPos - e.clientX + startWidth
